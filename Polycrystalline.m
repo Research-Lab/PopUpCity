@@ -7,7 +7,7 @@ npanel = 19.09/100; % 5% bifacial gain CS3U-365PB-AG
 %Efficiency for 10% gain - 20.04%, 20% gain - 21.84%, 30% gain - 23.68%
 pmax = 383; %W 5% bifacial gain CS3U-365PB-AG
 %Nominal Max Power for 10% gain - 402W, 20% gain - 438W, 30% gain - 475 W
-data = xlsread('Brandon');
+data = xlsread(fullfile(path, file));
 SolarIn = data(:,6);
 
 
