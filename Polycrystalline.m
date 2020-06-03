@@ -1,4 +1,4 @@
-% 1 month simulation for January using a polycrystalline solar panel
+% 1 year simulation using a polycrystalline solar panel
 % https://www.canadiansolar.com/wp-content/uploads/2019/12/Canadian_Solar-Datasheet-BiKu_CS3U-PB-AG_High-Efficiency_EN.pdf
 % Last Modified May 24, 2020
 
