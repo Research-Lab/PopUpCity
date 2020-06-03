@@ -1,2 +1,20 @@
+fprintf ('Please select a solar data excel file');
+[file,path,indx] = uigetfile('*.xlsx'); %Reads in a user selected excel sheet
+if isequal(file,0)
+   disp('User selected Cancel') %if user does not select a sheet this is displayed
+else %If a user selects an excel sheet it will run through the solar simulation codes to find the hourly power produced in KW
+    run ('Polycrystalline.m');
+    run ('Monocrystalline.m');
+    run ('ThinFilm.m');
+    run ('MonocrystallineLG.m');
+end
 
-hello world
+%{
+fprintf ('Please select a wind data excel file');
+[file,path,indx] = uigetfile('*.xlsx'); %Reads in a user selected excel sheet
+if isequal(file,0)
+   disp('User selected Cancel') %if user does not select a sheet this is displayed
+else %If a user selects an excel sheet it will run through the wind simulation codes to find the hourly power produced in KW
+    run ('Wind Code')
+end
+}%
