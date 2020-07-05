@@ -2,28 +2,35 @@
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
 %Last Updated: June 19, 2020
 
-%% Design Variables:
+%% Design Variables
+
 %  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
 %  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
-%  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7(7), 8(8), 9(9), 10(10)]
-%  Design Variable 5 = Model of Filtration Membrane
-%  Design Variable 6 = Tank size selected
-%  Design Variable 7 = Number of PV panels -->choose battery/energy storage (Continuous)
+%  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
+%  Design Variable 5 = Type of Membrane [1 (RO membrane), 2 (UF membrane), 3 (MF membrane), 4 (NF membrane)]
+%  Design Variable 6 = RO membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10), 11 (11), 12 (12)]
+%  Design Variable 7 = MF membrane filtration rate [1 (1), 2 (2)]
+%  Design Variable 8 = UF membrane filtration rate [1 (1), 2 (2), 3(3)]
+%  Design Variable 9 = NF membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
+%  Design Variable 10 = Tank size selected
+%  Design Variable 11 = Number of solar panels -->choose battery/energy storage (Continuous)
                       %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
-% Design Variable 8 = Model of Solar Panel
-% Design Variable 9 = Model of Wind Turbine [range]
-% Design Variable 10 = Number of Wind Turbine Blades [range]
-         
+% Design Variable 12 = Model of Solar Panel
+% Design Variable 13 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
 
+%% Call in Cost Function 
 
-function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor]=Simulation(x,MCfit,system_life,PVpower)
+run('Cost_Function');
+
+function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor]=Combined_code(x,MCfit,system_life,PVpower)
 DailyVol=10;
+
 %% Constant Values for Simulation
 
 simulation_day=365*system_life;%Number of days for the simulation time
 
-%Anti-Scalant Dosing
+%% Anti-Scalant Dosing
 Dose_F135 = 3.9; % in mg/L Dose rate for anti-scalant based on Flocon calculator (Flodose)
 density_F135=1.165e-3; % in mg/mL Flocon 135 density = 1.165±0.035 g/cm3
 as_dose_f135 = Dose_F135 * 1000 * (1/density_F135); %converted to mL / m3 for ease of calculations
@@ -53,8 +60,21 @@ end
 
 rinse=x(2); % rinsing [ NoRinse (1), Rinse (2) ]
 time_to_replace=x(3); % time to replace membrane in days (continuous integer variable)
-num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7(7), 8(8), 9(9), 10(10)]
-mod_membrane=x(5); % model of membrane that is chosen from lookup tables 
+num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7(7), 8(8), 9(9), 10 (10)]
+membrane=x(5); %Type of Membrane [1 (RO membrane), 2 (UF membrane), 3 (MF membrane), 4 (NF membrane)]
+
+if x(5) == 1 %A RO membrane is selected
+    x(6) = membraneRO(:,6);
+    filtration_rate = x(6)*x(4)
+   
+elseif x(5) == 2 %A UF membrane is selected 
+    
+elseif x(5) == 3 %A MF membrane is selected
+
+elseif x(5) == 4 %A NF membrane is selected 
+    
+end 
+    
 
 A=A_RO*num_membrane;%total active membrane area is the area of the RO module x number of RO modules
 CF=1/(1-RR_sys);%concentration factor
@@ -62,10 +82,12 @@ p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering con
 Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
 Qf=(1/RR_sys)*(Qp);
 tank_vol_options = 'watertank'; %tank volume options for the design variable
-max_tank_vol=tank_vol_options(x(6));
-
-numPVpanel=x(7);% number of pv panels
-mod_pp = x(8); % model of the solar panel selected
+max_tank_vol=tank_vol_options(x(10));
+    
+    
+numPVpanel=x(11);% number of pv panels [1-50]
+mod_pp = x(12); % model of the solar panel selected
+mod_wind = x(13); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
 
 
 %% Initialization of Values
@@ -119,7 +141,7 @@ for i=1:simulation_day
         num_modules_replaced=num_modules_replaced+1;
     end
     
-  %{
+  
    %Power Strategy - changing because also wind  
     
    Energy_prev=0;
@@ -196,7 +218,7 @@ for i=1:simulation_day
             PV_E_dif(i,s)=PVEnergy_hourly(i,s);
             Power_use(i,s)=0;          
         end
-    %}
+    
     
         %Tank Volume
         
