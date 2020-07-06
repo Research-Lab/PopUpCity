@@ -5,19 +5,30 @@
 %% Design Variables
 
 %  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
+x(1)= randi(3); %for testing
 %  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
+x(2)= randi(2); %for testing
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
+x(3)= randi(60); %for testing
 %  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
+x(4)= randi(10); %for testing
 %  Design Variable 5 = Type of Membrane [1 (RO membrane), 2 (UF membrane), 3 (MF membrane), 4 (NF membrane)]
+x(5)= randi(4); %for testing
 %  Design Variable 6 = RO membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10), 11 (11), 12 (12)]
+x(6)= randi(12); %for testing
 %  Design Variable 7 = MF membrane filtration rate [1 (1), 2 (2)]
+x(7)= randi(2); %for testing
 %  Design Variable 8 = UF membrane filtration rate [1 (1), 2 (2), 3(3)]
+x(8)= randi(3); %for testing
 %  Design Variable 9 = NF membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
+x(9)= randi(4); %for testing
 %  Design Variable 10 = Tank size selected
+x(10)= randi(20); %for testing
 %  Design Variable 11 = Number of solar panels -->choose battery/energy storage (Continuous)
                       %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
 % Design Variable 12 = Model of Solar Panel
 % Design Variable 13 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
+x(13)= randi(4); %for testing
 
 %% Call in Cost Function 
 
@@ -86,7 +97,7 @@ max_tank_vol=tank_vol_options(x(10));
     
     
 numPVpanel=x(11);% number of pv panels [1-50]
-mod_pp = x(12); % model of the solar panel selected
+mod_pp = x(12); % model of the solar panel selected [1-9]
 mod_wind = x(13); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
 
 
@@ -154,11 +165,11 @@ for i=1:simulation_day
         
         % PVPower uses PVpower in kW/m^2, and multiplies by the panel size (m^2),
         % number of panels and panel efficieny
-        PVEnergy_sum(i,s)=PVpanelPower(s)*deltat+Energy_prev;
+        PVEnergy_sum(i,s)=solarPower(s)*deltat+Energy_prev;
         Energy_prev=PVEnergy_sum(i,s);
-        PVEnergy_hourly(i,s)=PVpanelPower(s)*deltat;
+        PVEnergy_hourly(i,s)=solarPower(s)*deltat;
         
-        if s>12 && (foundsunset==0 && PVpanelPower(s)==0)
+        if s>12 && (foundsunset==0 && solarPower(s)==0)
         sunset_hr=s;
         foundsunset=1;
         end
@@ -282,10 +293,7 @@ tank_vol_singlevector=reshape(tank_vol',simulation_day*24,1);
 PVEnergy_singlevector=reshape(PVEnergy',simulation_day*24,1);
 FF_singlevector=reshape(FF',simulation_day*24,1);
 rinsing_singlevector=reshape(rinsing',simulation_day*24,1);
-
  
-
-
 figure, plot(Qp_singlevector)
 xlabel('hour');
 ylabel('Qp [m^{3}]');
@@ -295,13 +303,12 @@ ylabel('Tank Volume [m^{3}]');
 figure, plot(PVEnergy_singlevector)
 xlabel('hour');
 ylabel('PV energy [kWh]');
-figure, plot(PVpanelPower)
+figure, plot(solarPower)
 xlabel('hour');
 ylabel('PV Power [kW]');
 figure, plot(rinsing_singlevector)
 xlabel('hour');
 ylabel('Rinsing [m^{3}]');
-
 %}
 %%
 
