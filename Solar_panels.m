@@ -1,5 +1,5 @@
 % 1Year power simulation for different locations and solar panels
-%Last Modified July 2, 2020
+%Last Modified July 8, 2020
 
 %% User imput
 fprintf ('Please select a solar data excel file \n');
@@ -42,22 +42,31 @@ disp (x(11));
 
     if x(12)== 1
         solarPower=pp1* x(11);
+        solarCost= SP(1,3).* x(11);
     elseif x(12)==2
         solarPower=pp2* x(11);
+        solarCost= SP(2,3).* x(11);
     elseif x(12)==3
         solarPower=pp3* x(11);
+        solarCost= SP(3,3).* x(11);
     elseif x(12)==4
         solarPower=pp4* x(11);
+        solarCost= SP(4,3).* x(11);
     elseif x(12)==5
         solarPower=pp5* x(11);
+        solarCost= SP(5,3).* x(11);
     elseif x(12)==6
         solarPower=pp6* x(11);
+        solarCost= SP(6,3).* x(11);
     elseif x(12)==7
         solarPower=pp7* x(11);
+        solarCost= SP(7,3).* x(11);
     elseif x(12)==8
         solarPower=pp8* x(11);
+        solarCost= SP(8,3).* x(11);
     elseif x(12)==9
-        solarPower=pp9* x(11);   
+        solarPower=pp9* x(11); 
+        solarCost= SP(9,3).* x(11);
     end
 
 end
