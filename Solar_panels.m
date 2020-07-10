@@ -1,5 +1,5 @@
 % 1Year power simulation for different locations and solar panels
-%Last Modified July 8, 2020
+%Last Modified July 2, 2020
 
 %% User imput
 fprintf ('Please select a solar data excel file \n');
@@ -34,39 +34,40 @@ else %If a user selects an excel sheet it will run through the solar simulation 
        pp9 =((SP(9,2)/100).*SP(9,4).*SolarIn.*SP(2,5))/1000; %Efficiency*Max Power*Hourly Solar Data*size KW https://www.acosolar.com/ja-solar-345w-solar-panel-jap72s09-345-sc-72cells-poly-silver-frame.html          
 
 %% IF statements for the GA
-x(12)= randi(9); %for testing
-x(11)= randi(50);
+x(8)= randi(9); %for testing
+x(7)= randi(50);
 
-disp (x(12));
-disp (x(11));
+disp (x(8));
+disp (x(7));
 
-    if x(12)== 1
-        solarPower=pp1* x(11);
-        solarCost= SP(1,3).* x(11);
-    elseif x(12)==2
-        solarPower=pp2* x(11);
-        solarCost= SP(2,3).* x(11);
-    elseif x(12)==3
-        solarPower=pp3* x(11);
-        solarCost= SP(3,3).* x(11);
-    elseif x(12)==4
-        solarPower=pp4* x(11);
-        solarCost= SP(4,3).* x(11);
-    elseif x(12)==5
-        solarPower=pp5* x(11);
-        solarCost= SP(5,3).* x(11);
-    elseif x(12)==6
-        solarPower=pp6* x(11);
-        solarCost= SP(6,3).* x(11);
-    elseif x(12)==7
-        solarPower=pp7* x(11);
-        solarCost= SP(7,3).* x(11);
-    elseif x(12)==8
-        solarPower=pp8* x(11);
-        solarCost= SP(8,3).* x(11);
-    elseif x(12)==9
-        solarPower=pp9* x(11); 
-        solarCost= SP(9,3).* x(11);
+    if x(8)== 1
+        solarPower=pp1* x(7);
+        solarCost= SP(x(8),3).* x(7);
+    elseif x(8)==2
+        solarPower=pp2* x(7);
+        solarCost= SP(2,3).* x(7);
+    elseif x(8)==3
+        solarPower=pp3* x(7);
+        solarCost= SP(3,3).* x(7);
+    elseif x(8)==4
+        solarPower=pp4* x(7);
+        solarCost= SP(4,3).* x(7);
+    elseif x(8)==5
+        solarPower=pp5* x(7);
+        solarCost= SP(5,3).* x(7);
+    elseif x(8)==6
+        solarPower=pp6* x(7);
+        solarCost= SP(6,3).* x(7);
+    elseif x(8)==7
+        solarPower=pp7* x(7);
+        solarCost= SP(7,3).* x(7);
+    elseif x(8)==8
+        solarPower=pp8* x(7);
+        solarCost= SP(8,3).* x(7);
+    elseif x(8)==9
+        solarPower=pp9* x(7); 
+        solarCost= SP(9,3).* x(7);
     end
+
 
 end

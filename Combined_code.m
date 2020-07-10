@@ -1,44 +1,37 @@
 %Cost Model and Simulation for Water Filtration System
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
-%Last Updated: June 19, 2020
+%Last Updated: July 9, 2020
 
-%% Design Variables
-
-%  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
-x(1)= randi(3); %for testing
-%  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
-x(2)= randi(2); %for testing
-%  Design Variable 3 = continuous variable, length of time before replacing membrane in days
-x(3)= randi(60); %for testing
-%  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
-x(4)= randi(10); %for testing
-%  Design Variable 5 = Type of Membrane [1 (RO membrane), 2 (UF membrane), 3 (MF membrane), 4 (NF membrane)]
-x(5)= randi(4); %for testing
-%  Design Variable 6 = RO membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10), 11 (11), 12 (12)]
-x(6)= randi(12); %for testing
-%  Design Variable 7 = MF membrane filtration rate [1 (1), 2 (2)]
-x(7)= randi(2); %for testing
-%  Design Variable 8 = UF membrane filtration rate [1 (1), 2 (2), 3(3)]
-x(8)= randi(3); %for testing
-%  Design Variable 9 = NF membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
-x(9)= randi(4); %for testing
-%  Design Variable 10 = Tank size selected
-x(10)= randi(20); %for testing
-%  Design Variable 11 = Number of solar panels -->choose battery/energy storage (Continuous)
-                      %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
-% Design Variable 12 = Model of Solar Panel
-% Design Variable 13 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
-x(13)= randi(4); %for testing
+function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor]=Combined_code(x,FFfit,system_life,solarPower)
+DailyVol=10;
 
 %% Call in Cost Function 
 
 run('Cost_Function');
 
-function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor]=Combined_code(x,MCfit,system_life,PVpower)
-DailyVol=10;
+%% Design Variables
+
+%  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
+%x(1)= randi(3); %for testing
+%  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
+%x(2)= randi(2); %for testing
+%  Design Variable 3 = continuous variable, length of time before replacing membrane in days
+%  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
+%x(4)= randi(10); %for testing
+%  Design Variable 5 = Membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
+%x(5)= randi(4); %for testing
+%  Design Variable 6 = Tank size selected
+%x(6)= randi(75); %for testing
+%  Design Variable 7 = Number of solar panels -->choose battery/energy storage (Continuous)
+                      %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
+% Design Variable 8 = Model of Solar Panel
+% Design Variable 9 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
+%x(9)= randi(4); %for testing
+
 
 %% Constant Values for Simulation
 
+system_life = 5; 
 simulation_day=365*system_life;%Number of days for the simulation time
 
 %% Anti-Scalant Dosing
@@ -51,8 +44,8 @@ density_F260=1.35e-3; % in mg/mL Flocon 260 density = 1.35±0.05 g/cm3
 as_dose_f260 = Dose_F260 * 1000 * (1/density_F260); %converted to mL / m3 for ease of calculations
 
 %System Conditions
-p_psi = 300;
-p = p_psi * 0.0689476;%pressure in bar
+p_psi = membranetable(x(6),5);
+p = p_psi .* 0.0689476;%pressure in bar
 p_osm=1.9;
 v_rinse=40/1000;% in m3  %40L per rinse
 RR_sys=0.75; %recovery ratio is 75%
@@ -72,33 +65,42 @@ end
 rinse=x(2); % rinsing [ NoRinse (1), Rinse (2) ]
 time_to_replace=x(3); % time to replace membrane in days (continuous integer variable)
 num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7(7), 8(8), 9(9), 10 (10)]
-membrane=x(5); %Type of Membrane [1 (RO membrane), 2 (UF membrane), 3 (MF membrane), 4 (NF membrane)]
 
-if x(5) == 1 %A RO membrane is selected
-    x(6) = membraneRO(:,6);
-    filtration_rate = x(6)*x(4)
+%if x(5) == 1 %A RO membrane is selected
+    membrane_selected = membranetable(x(5),6);
+    filtration_rate = membrane_selected*x(4);
+    Qf_memb = membranetable(x(5),10);
+    RR_spec = membranetable(x(5),9);
+    mem_cost = membranetable(x(5),4).*x(4); 
+    Kw_init = 0.004533031; 
+    Qf_sys = membranetable(x(5),10);
+    
+    %penalty function for not enough water produced
    
-elseif x(5) == 2 %A UF membrane is selected 
+%elseif x(5) == 2 %A UF membrane is selected 
     
-elseif x(5) == 3 %A MF membrane is selected
+%elseif x(5) == 3 %A MF membrane is selected
 
-elseif x(5) == 4 %A NF membrane is selected 
+%elseif x(5) == 4 %A NF membrane is selected 
     
-end 
-    
+%end
 
-A=A_RO*num_membrane;%total active membrane area is the area of the RO module x number of RO modules
+
+A_mem = membranetable(x(5),7) %active membrane area is the area of the module
+A=A_mem*num_membrane;%total active membrane area is the area of the module x number of modules
 CF=1/(1-RR_sys);%concentration factor
 p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
 Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
 Qf=(1/RR_sys)*(Qp);
-tank_vol_options = 'watertank'; %tank volume options for the design variable
-max_tank_vol=tank_vol_options(x(10));
+
+tank_vol_options = wt(:,2); %tank volume options for the design variable
+max_tank_vol=tank_vol_options(x(6));
+% penalty function for tanks
     
     
-numPVpanel=x(11);% number of pv panels [1-50]
-mod_pp = x(12); % model of the solar panel selected [1-9]
-mod_wind = x(13); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
+num_panel=x(8);% number of pv panels [1-50]
+mod_pp = x(9); % model of the solar panel selected [1-9]
+mod_wind = x(10); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
 
 
 %% Initialization of Values
@@ -115,9 +117,9 @@ rinsing_flag=0;%rinsing flag to catch everytime a rinse has occured
 hour=0;
 deltat=1;
 
-PVEnergy_sum=zeros(simulation_day,24);
-PVEnergy_hourly=zeros(simulation_day,24);
-num_hrs_RO=zeros(1,simulation_day);
+Energy_sum=zeros(simulation_day,24);
+Energy_hourly=zeros(simulation_day,24);
+num_hrs=zeros(1,simulation_day);
 Qp=zeros(simulation_day,24);
 PV_E_dif=zeros(simulation_day,24);
 Power_use=zeros(simulation_day,24);
@@ -134,7 +136,7 @@ eff_syst=0.8;%the battery round trip efficiency
 
 % power generated function for wind and solar 
 
-PumpEnergy=(27.78*p*Qf_memb/eff_hp)*deltat/1000; %kW is unit of PumpEnergy
+%PumpEnergy=(27.78*p*Qf_memb/eff_hp)*deltat/1000; %kW is unit of PumpEnergy
 rinsing=zeros(simulation_day,24);
 
 %Water demand
@@ -153,10 +155,10 @@ for i=1:simulation_day
     end
     
   
-   %Power Strategy - changing because also wind  
+   %Power Strategy 
     
    Energy_prev=0;
-    %foundsunset=0;
+    foundsunset=0;
     
   
     %Power Strategy
@@ -165,9 +167,9 @@ for i=1:simulation_day
         
         % PVPower uses PVpower in kW/m^2, and multiplies by the panel size (m^2),
         % number of panels and panel efficieny
-        PVEnergy_sum(i,s)=solarPower(s)*deltat+Energy_prev;
-        Energy_prev=PVEnergy_sum(i,s);
-        PVEnergy_hourly(i,s)=solarPower(s)*deltat;
+        Energy_sum(i,s)=solarPower(s)*deltat+Energy_prev+W(s);
+        Energy_prev=Energy_sum(i,s);
+        Energy_hourly(i,s)=solarPower(s)*deltat+W(s);
         
         if s>12 && (foundsunset==0 && solarPower(s)==0)
         sunset_hr=s;
@@ -178,17 +180,17 @@ for i=1:simulation_day
     
     
     % Number hours run
-    num_hrs_RO(i)=round(PVEnergy_sum(i,24)/PumpEnergy);
-    Pump_EnergyReqt=PVEnergy_sum(i,24)/num_hrs_RO(i);
+    num_hrs(i)=round(Energy_sum(i,24)/PumpEnergy);
+    Pump_EnergyReqt=Energy_sum(i,24)/num_hrs(i);
     enough_energy=0;
     num_hours_run=0;
     
     rinsing_flag=0;
-    PV_Batt_RunningSum_Prev=0;
+    Batt_RunningSum_Prev=0;
     Batt_SOC_Prev=0;
     
-    
-    turn_on=turn_off-num_hrs_RO(i)-1;
+    turn_off = sunset_hr; 
+    turn_on=turn_off-num_hrs(i)-1;
     
     for s=1:24
             
@@ -201,10 +203,10 @@ for i=1:simulation_day
         
         if (rinsing_flag==0 && rinse==2)
             
-            if num_hours_run==num_hrs_RO(i)
+            if num_hours_run==num_hrs(i)
                 rinsing_flag=1;
                 rinsing(i,s)=v_rinse;
-            elseif s==24 && num_hrs_RO(i)>=1
+            elseif s==24 && num_hrs(i)>=1
                 rinsing_flag=1;
                 rinsing(i,s)=v_rinse;
             end
@@ -212,21 +214,25 @@ for i=1:simulation_day
             rinsing(i,s)=0;
         end
         
-        FF(i,s)=findPermeability(days_nMem,num_hours_run,MCfit(1),MCfit(2), MCfit(3),MCfit(4));
+        FFfit=[0.5371,3.752,6.024,-0.027385333];%mid% AC & Rinse
+    %FFfit=[0.4472,0.6963,2.587,-0.027385333];%low% AC & Rinse
+    %FFfit=[0.627,6.808,9.46,-0.027385333];%high AC & Rinse
+    
+        FF(i,s)=findPermeability(days_nMem,num_hours_run,FFfit(1),FFfit(2), FFfit(3),FFfit(4));
         
-        if enough_energy==1 && num_hours_run<=num_hrs_RO(i)
+        if enough_energy==1 && num_hours_run<=num_hrs(i)
             % Run system
             Qp(i,s)=max(0,(Kw_init*FF(i,s)*A*(p-p_osm))); 
 
             %Battery
-            PV_E_dif(i,s)=PVEnergy_hourly(i,s)-Pump_EnergyReqt;
+            PV_E_dif(i,s)=Energy_hourly(i,s)-Pump_EnergyReqt;
             Power_use(i,s)=-Pump_EnergyReqt;
             
             num_hours_run=num_hours_run+1;
         else
             Qp(i,s)=0;
             %Battery
-            PV_E_dif(i,s)=PVEnergy_hourly(i,s);
+            PV_E_dif(i,s)=Energy_hourly(i,s);
             Power_use(i,s)=0;          
         end
     
@@ -264,10 +270,10 @@ for i=1:simulation_day
             
         end
         
-        Batt_SOC(i,s)=PVEnergy_hourly(i,s)+Power_use(i,s)+Batt_SOC_Prev;
+        Batt_SOC(i,s)=Energy_hourly(i,s)+Power_use(i,s)+Batt_SOC_Prev;
         Batt_SOC_Prev=Batt_SOC(i,s);
-        PV_Batt_RunningSum(i,s)=PV_E_dif(i,s)+PV_Batt_RunningSum_Prev;
-        PV_Batt_RunningSum_Prev=PV_Batt_RunningSum(i,s);
+        PV_Batt_RunningSum(i,s)=PV_E_dif(i,s)+Batt_RunningSum_Prev;
+        Batt_RunningSum_Prev=PV_Batt_RunningSum(i,s);
     end
     
     %Battery Storage vector
