@@ -6,7 +6,7 @@ function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob,sola
 
 %% Design Variables
 %  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
-x(1)= randi(3); %for testing
+x(1)= randi(2); %for testing
 %  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
 x(2)= randi(2); %for testing
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
