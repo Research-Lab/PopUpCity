@@ -2,39 +2,20 @@
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
 %Last Updated: July 9, 2020
 
-function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob,solarPower)
+function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed)
 
 %% Design Variables
-%  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
-x(1)= randi(2); %for testing
+%  Design Variable 1 = Antiscalant [None (3), F135 (1), F260(2)]
+%x(1)= randi(2); %for testing
 %  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
-x(2)= randi(2); %for testing
+%x(2)= randi(2); %for testing
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
 %  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
-x(4)= randi(10); %for testing
+%x(4)= randi(10); %for testing
 %  Design Variable 5 = Membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
-x(5)= randi(4); %for testing
+%x(5)= randi(4); %for testing
 %  Design Variable 6 = Tank size selected
-x(6)= randi(75); %for testing
-
-%% Gather User info
-
-prompt ='Please state geographical location \n';
-    loc = input(prompt, 's');
-
-promptcom = 'How many members are in the community? \n '; %Finds out how many members there are. Will be used to calculate water needed and extra power
-    comnum = input(promptcom);
-
-water_demand = comnum*200*0.264; %Number of members in the community * 200L (pop up city) = amount of water needed to be collected per day (in Gallons)
-%extrapower = comnum*1.5; %Number of members in the community * 1.5kW (pop up city)
-    
-%% Solar Panel Code
-
-run('Solar_panels');
-
-%% Wind code
-
-run('V6');
+%x(6)= randi(75); %for testing
 
 %% Simulation
 %sim_life=10; %Number of years for the simulation time
@@ -92,9 +73,93 @@ elseif x(1)==2 && x(2)==2
     fit=[0.5371,3.752,6.024,-0.027385333];%med
     %fit=[0.627,6.808,9.46,-0.027385333];%high
 end
-    
-[mass_as_used,Water_NotMetLOWP,Qf_sys,BattStor]=Combined_code(x,fit,sim_life,solarPower);
 
+
+%[mass_as_used,Water_NotMet,Qf_memb,Max_BattStor, wind_speed, PV_power]=Combined_code(x,fit,sim_life,Energy_sum, W,solarPower);
+
+%% Solar Panel Code
+
+%run('Solar_panels');
+
+%% Lookup Table for solar panels
+    SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
+        4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
+       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72];
+    % Creates the array with all the key information about each solar panel
+    
+    SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
+        'Operating Voltage (V)', 'Operating Current (A)', 'Number of Cells'}); %Creates a Lookup Table 
+    
+
+
+%% IF statements for the GA
+%x(8)= randi(9); %for testing
+%x(7)= randi(50);
+    if x(8)== 1
+        solarPower=(((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)* x(7);
+        solarCost= SP(1,3).* x(7);
+    elseif x(8)==2
+        solarPower=(((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)* x(7);
+        solarCost= SP(2,3).* x(7);
+    elseif x(8)==3
+        solarPower=(((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)* x(7);
+        solarCost= SP(3,3).* x(7);
+    elseif x(8)==4
+        solarPower=(((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)* x(7);
+        solarCost= SP(4,3).* x(7);
+    elseif x(8)==5
+        solarPower=(((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)* x(7);
+        solarCost= SP(5,3).* x(7);
+    elseif x(8)==6
+        solarPower=(((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)* x(7);
+        solarCost= SP(6,3).* x(7);
+    elseif x(8)==7
+        solarPower=(((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)* x(7);
+        solarCost= SP(7,3).* x(7);
+    elseif x(8)==8
+        solarPower=(((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)* x(7);
+        solarCost= SP(8,3).* x(7);
+    elseif x(8)==9
+        solarPower=(((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)* x(7); 
+        solarCost= SP(9,3).* x(7);
+    end
+    
+%% Wind code
+
+%run('V6');
+%% Lookup table for wind turbines
+Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000];
+WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
+    'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
+%% Power curves for different wind turbines
+%x(9)= randi(4); %for testing
+%x(10) = Model of WT [Superwind350(1), Mobisun 1kW(2),Mobisun 3kW(3), Mobisun 5kW(4)]
+%need to introduce x(13) in the combined
+if x(9) == 1 %WT1
+    %wind_speed_weibull= 0:0.5:12.5;
+    W = (0.1645)*wind_speed.^(3)+(0.2885)*wind_speed.^(2)-1.879*wind_speed+0.0572;
+    %Total_power_output = sum(W1)/1000;
+    display(sum(W)/1000, 'Total Power obtained using SuperWind350(kW)/year')
+    wind_cost = Windturbines(x(9),8);
+   
+elseif x(9) == 2 %WT2
+    W = (0.011)*wind_speed.^(6)-(0.6033)*wind_speed.^(5)+(12.75)*wind_speed.^(4)-(131.99)*wind_speed.^(3)+(702.6)*wind_speed.^(2)-1740.3*wind_speed+1572.6;
+    display(sum(W)/1000, 'Total Power obtained using Mobisun 1000kW(kW)/year')
+    wind_cost = Windturbines(x(9),8);
+
+elseif x(9) == 3 %WT2
+    W = -(0.069)*wind_speed.^(5)+(2.3178)*wind_speed.^(4)-(27.455)*wind_speed.^(3)+(153.8)*wind_speed.^(2)-231.99*wind_speed+37.767;
+    display(sum(W)/1000, 'Total Power obtained using Mobisun 3000kW(kW)/year')   
+    wind_cost = Windturbines(x(9),8);
+
+elseif x(9) == 4 %WT2
+    W = -(0.1141)*wind_speed.^(5)+(3.8867)*wind_speed.^(4)-(46.667)*wind_speed.^(3)+(263.39)*wind_speed.^(2)-402.08*wind_speed+67.197;
+    display(sum(W)/1000, 'Total Power obtained using Mobisun 5000kW(kW)/year')   
+    wind_cost = Windturbines(x(9),8);
+end
+%end
+
+[mass_as_used,Water_NotMet,Qf_memb,Max_BattStor, wind_speed, PV_power]=Combined_code(x,fit,sim_life, W,solarPower, waterday);
 %% Energy System
 
 %Balance of System Costs
@@ -134,9 +199,19 @@ end
  watertank = array2table(wt,...
     'VariableNames',{'Cost (USD)', 'Capacity (Gallons)'}); %Lookup table for water tanks
 
-%watertank_selected = watertank(x(7),2);
-PresVes.CCTank = wt(x(7),1);
+tank_vol_options = wt(x(6),2); %tank volume options for the design variable
+DailyVol=tank_vol_options;
+% penalty function for tanks
 
+CCTank = wt(x(6),1);
+
+CC_components=CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank;
+
+%Balance of System (piping, valves, filter housings)
+CCpipes=0.1*CCpipes.CC_components; %assumed from Amy's thesis
+
+CCpipes.CCpostchems=0.03*CCpipes.CC_components;% post-treatment water re-mineralizing costs [102] Amy's Thesis
+CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
 
 %% Water Filtration + Motor & Pump selection
     %RO membranes from: https://www.wateranywhere.com/membranes/filmtec-dow-ro-membranes/dow-filmtec-commercial-ro-membranes/?p=1
@@ -147,24 +222,33 @@ PresVes.CCTank = wt(x(7),1);
     %Motor from: https://www.globalindustrial.ca/g/motors/ac-motors-definite-purpose/pump-motors/baldor-3-phase-pump-motors
     %UV Purifier from: https://www.freshwatersystems.com/collections/uv-water-purification?refinementList%5Bnamed_tags.System%20Class%5D%5B0%5D=Commercial%20Systems
 
-    %% 
-    promptc = 'Please enter the sodium level in the water in (mg/L) \n'; %User inputs salinity levels
-    salinity = input(promptc);
     
    %% RO membrane selection
     
-    if salinity >= 60 %If it is above 60mg/l then the system will choose an RO membrane from the RO lookup table
+    if salinity > 60 %If it is above 60mg/l then the system will choose an RO membrane from the RO lookup table
        
             membranetable = [1	2.5	40	182	600	45	850	28	0.15 1.4 67; 2	4	14	173	600	45	525	20	0.05 3.2 114; 3	4	21	194	600	45	900	36	0.08 3.2 137; 4	4	40	247	600	45	2625	78	0.15 3.2 130];
 
             membrane = array2table(membranetable,...
          'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio', 'Feed Rate (m3/h)', 'Membrane Housing Cost (USD)'}); %Lookup table
-            
+    
             PresVes.CCmemb = membranetable(x(5),4).*x(4);
             PresVes.PresVes = membranetable(x(5),11).*x(4); 
+            membrane_selected = membranetable(x(5),6);
+            filtration_rate = membrane_selected*x(4);
+            Qf_memb = membranetable(x(5),10);
+            RR_spec = membranetable(x(5),9);
+            Kw_init = 0.004533031; 
+            Qf_sys = membranetable(x(5),10);
+            p_psi = membranetable(x(5),5);
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = membranetable(x(5),7) %active membrane area is the area of the module
+            A=A_mem*num_membrane;%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
+            Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
             
-      
-    
      %Filter = membraneRO(cat(2,membraneRO{:,6}) > 'wateramountday',:) %The chosen filter is dependant on the filtration rate and amount of water needed for the community and extracts that row from the lookup table
         %RO_selected = RO(:,6);
         %RO_selected
@@ -189,14 +273,11 @@ PresVes.CCTank = wt(x(7),1);
    
    %% UF, MF or NF membrane selection 
     elseif salinity < 60 %If it is below 60mg/l then the sysetm will choose either an UF or MF membrane
-        
-        
-          promptb = 'Please enter the amount of dissolved organic content in the water \n'; %User inputs DOC level
-          DOC = input(promptb);
+     
         
           %DOC = xlsread(fullfile(path,file),DOC:DOC); %Matlab reads the Dissolved organic content value
        
-           if DOC <= 50 %If it is below 50 then the system will chose a MF membrane from lookup table (this value is not accurate)
+           if DOC < 50 %If it is below 50 then the system will chose a MF membrane from lookup table (this value is not accurate)
                
        
        
@@ -216,7 +297,6 @@ PresVes.CCTank = wt(x(7),1);
                
            end 
     end
-
 
 %% Filter and Filter Cartridge
 PresVes.CC_Filter=20+65.54;
@@ -287,11 +367,11 @@ system_life=25; %25 years
 Equiv_Ann_cost_factor=(disc_rate*(1+disc_rate)^system_life)/(((1+disc_rate)^system_life)-1);
 PresVes.AnnCostsRepl=PresVes.CCmemb*PresVes.membReplRate+PresVes.FilterCost*PresVes.FilterReplRate+PresVes.CCpump*PresVes.pumpReplRate+PresVes.CCmotor*PresVes.motorReplRate+PresVes.CCpostchems*PresVes.postchemsReplRate;
 
-PV.AnnCost=(PV.Array.CC+PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost)*Equiv_Ann_cost_factor;
+AnnCost=(solarCost+PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost+wind_cost)*Equiv_Ann_cost_factor;
 
 PresVes.AnnCostCC=(PresVes.CCmemb+PresVes.PresVes+PresVes.CCpump+PresVes.CCmotor+PresVes.CC_Filter+PresVes.CC_anti_sc+PresVes.CCTank+PresVes.CCpipes)*Equiv_Ann_cost_factor;
 
-PVRO.AnnTotal=PV.AnnCost+PresVes.AnnCostCC+PresVes.AnnCostsRepl+PresVes.Cost_as;
+PVRO.AnnTotal=AnnCost+PresVes.AnnCostCC+PresVes.AnnCostsRepl+PresVes.Cost_as;
 
 PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMetLOWP-LOWP_Global));
 

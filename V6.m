@@ -2,6 +2,8 @@
 %Last Modified June 28, 2020
 
 %clear, close all; clc
+
+%
 %% User Inputs the file
 fprintf(' Please input the wind data excel file \n');
 [file, path, indx] = uigetfile('*.csv');
@@ -40,6 +42,7 @@ WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rate
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
 display(WindArray)
 %We can add more wind turbines in our array
+%
 
 %% Power curves for different wind turbines
 x(9)= randi(4); %for testing
@@ -68,5 +71,5 @@ elseif x(9) == 4 %WT2
     wind_cost = Windturbines(x(9),8);
 end
 %end
-end
+
 

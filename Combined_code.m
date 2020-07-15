@@ -2,12 +2,13 @@
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
 %Last Updated: July 9, 2020
 
-function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor]=Combined_code(x,FFfit,system_life,solarPower)
-DailyVol=10;
+function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor,wind_speed, PV_power]=Combined_code(x,FFfit,system_life,W, solarPower, waterday)
+
+DailyVol=waterday;
 
 %% Call in Cost Function 
 
-run('Cost_Function');
+%run('Cost_Function');
 
 %% Design Variables
 
@@ -31,8 +32,9 @@ run('Cost_Function');
 
 %% Constant Values for Simulation
 
-system_life = 5; 
+system_life = 25; 
 simulation_day=365*system_life;%Number of days for the simulation time
+
 
 %% Anti-Scalant Dosing
 Dose_F135 = 3.9; % in mg/L Dose rate for anti-scalant based on Flocon calculator (Flodose)
@@ -44,8 +46,6 @@ density_F260=1.35e-3; % in mg/mL Flocon 260 density = 1.35±0.05 g/cm3
 as_dose_f260 = Dose_F260 * 1000 * (1/density_F260); %converted to mL / m3 for ease of calculations
 
 %System Conditions
-p_psi = membranetable(x(6),5);
-p = p_psi .* 0.0689476;%pressure in bar
 p_osm=1.9;
 v_rinse=40/1000;% in m3  %40L per rinse
 RR_sys=0.75; %recovery ratio is 75%
@@ -66,41 +66,11 @@ rinse=x(2); % rinsing [ NoRinse (1), Rinse (2) ]
 time_to_replace=x(3); % time to replace membrane in days (continuous integer variable)
 num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7(7), 8(8), 9(9), 10 (10)]
 
-%if x(5) == 1 %A RO membrane is selected
-    membrane_selected = membranetable(x(5),6);
-    filtration_rate = membrane_selected*x(4);
-    Qf_memb = membranetable(x(5),10);
-    RR_spec = membranetable(x(5),9);
-    mem_cost = membranetable(x(5),4).*x(4); 
-    Kw_init = 0.004533031; 
-    Qf_sys = membranetable(x(5),10);
-    
-    %penalty function for not enough water produced
-   
-%elseif x(5) == 2 %A UF membrane is selected 
-    
-%elseif x(5) == 3 %A MF membrane is selected
+tank_vol_options = wt(x(6),2); %tank volume options for the design variable
 
-%elseif x(5) == 4 %A NF membrane is selected 
-    
-%end
-
-
-A_mem = membranetable(x(5),7) %active membrane area is the area of the module
-A=A_mem*num_membrane;%total active membrane area is the area of the module x number of modules
-CF=1/(1-RR_sys);%concentration factor
-p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
-Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
-Qf=(1/RR_sys)*(Qp);
-
-tank_vol_options = wt(:,2); %tank volume options for the design variable
-max_tank_vol=tank_vol_options(x(6));
-% penalty function for tanks
-    
-    
-num_panel=x(8);% number of pv panels [1-50]
-mod_pp = x(9); % model of the solar panel selected [1-9]
-mod_wind = x(10); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
+num_panel=x(7);% number of pv panels [1-50]
+mod_pp = x(8); % model of the solar panel selected [1-9]
+mod_wind = x(9); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
 
 
 %% Initialization of Values
@@ -109,7 +79,7 @@ hour=0;
 deltat=1;
 tank_full=1;
 tank_vol=zeros(simulation_day,24);
-tank_vol_prev=max_tank_vol*1;
+tank_vol_prev=tank_vol_options*1;
 days_nMem=0;
 water_not_met_hourly=0;
 num_modules_replaced=0;% counter for number of modules replaced
