@@ -73,12 +73,12 @@ PV_power = SolarIn;
 %% Read in Wind Data 
     %% User Inputs the file
 fprintf(' Please input the wind data excel file \n');
-[file, path, indx] = uigetfile('*.csv');
+[file, path, indx] = uigetfile('*.xlsx');
 if isequal(file, 0)
     disp('User selected Cancel')   
 else 
     promptf = 'Please enter the column which contains the hourly wind data \n';
-    f = input(promptf) - 1;
+    f = input(promptf);
     data = xlsread(fullfile(path, file));
     wind_speed_kmhr = data(:, f);
 end
@@ -200,7 +200,7 @@ for i=1:iter
    LOWP_Global=i/100;
     
 %    DailyVol=i;
-[x_opt_cf(i,:),cost(i),exitcond(i)] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 4],[],[1;2;3;4;5;6;7;8;9],options);     
+[x_opt_cf(i,:),cost(i),exitcond(i)] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 4],[],[1;2;3;4;5;6;7;8;9],options);     
 %[x_opt_cf_ga(i,:),cost_ga(i),exitcond_ga(i)] = ga(@(x) FindCost_PenFun(x,DailyVol,LOWP_Global,Penalty_Glob,PVpower),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 6; 2; 3; 23; 50],[],[1;2;3;4;5;6;7;8],options);
 %     save('GA_Oct16_2m3perday_5yrMaxML_variablePop_SimLife10yr_iter.mat');
 
@@ -236,3 +236,4 @@ x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,
 
 end
 toc
+
