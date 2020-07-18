@@ -2,7 +2,7 @@
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
 %Last Updated: July 9, 2020
 
-function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed)
+function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed, waterday, salinity)
 
 %% Design Variables
 %  Design Variable 1 = Antiscalant [None (3), F135 (1), F260(2)]
@@ -18,8 +18,10 @@ function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob, PV_
 %x(6)= randi(75); %for testing
 
 %% Simulation
-%sim_life=10; %Number of years for the simulation time
-DailyVol=10;
+sim_life=10; %Number of years for the simulation time
+%global tank_vol_options;
+
+%DailyVol=10;
 %{
 global PVpower;
 global DailyVol;
@@ -159,32 +161,8 @@ elseif x(9) == 4 %WT2
 end
 %end
 
-[mass_as_used,Water_NotMet,Qf_memb,Max_BattStor, wind_speed, PV_power]=Combined_code(x,fit,sim_life, W,solarPower, waterday);
-%% Energy System
+%[mass_as_used,Water_NotMet,Qf_memb,Max_BattStor, wind_speed, PV_power]=Combined_code(x,fit,sim_life, W,solarPower, waterday,PumpEnergy);
 
-%Balance of System Costs
-% BOS_structural=(0.12*Wdc) %racking etc.
-% BOS_electrical=0.27*Wdc % Wholesale prices for conductors, switches,
-% combiners and transition boxes, as well as conduit, grounding equipment,
-% monitoring system or production meters, fuses, and breakers
-% 
-% http://www.nrel.gov/docs/fy16osti/66532.pdf -- page 14
-
-PV.BOS.CC=(0.12*(280)+0.27*280)*x(8);
-
-%Battery Capital Costs
-PV.Batt.CC=BattStor*80; %Advanced Lead Acid Battery Storage is about $80/kWh in 2015 http://www.sciencedirect.com.myaccess.library.utoronto.ca/science/article/pii/B9780444637000000210 
-
-%Battery Replacement Costs
-%Assumed every 5 yrs based on 40,000 cycles to failure
-%conservative estimate some recent studies have shown they can last much
-%longer... ref?
-idisc=0.12;%discount rate
-PV_repl_prev=0;
-for i=5:5:20
-   PV.Batt.ReplCost= PV.Batt.CC/((1+idisc)^i)+PV_repl_prev;
-   PV_repl_prev=PV.Batt.ReplCost;
-end
 
 %% Water tank size and cost
 %Water tanks purchased from: https://www.tank-depot.com/product.aspx?id=3242
@@ -199,19 +177,13 @@ end
  watertank = array2table(wt,...
     'VariableNames',{'Cost (USD)', 'Capacity (Gallons)'}); %Lookup table for water tanks
 
-tank_vol_options = wt(x(6),2); %tank volume options for the design variable
-DailyVol=tank_vol_options;
+%tank_vol_options = wt(x(6),2); %tank volume options for the design variable
+%DailyVol=tank_vol_options;
 % penalty function for tanks
 
 CCTank = wt(x(6),1);
 
-CC_components=CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank;
 
-%Balance of System (piping, valves, filter housings)
-CCpipes=0.1*CCpipes.CC_components; %assumed from Amy's thesis
-
-CCpipes.CCpostchems=0.03*CCpipes.CC_components;% post-treatment water re-mineralizing costs [102] Amy's Thesis
-CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
 
 %% Water Filtration + Motor & Pump selection
     %RO membranes from: https://www.wateranywhere.com/membranes/filmtec-dow-ro-membranes/dow-filmtec-commercial-ro-membranes/?p=1
@@ -232,8 +204,14 @@ CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
             membrane = array2table(membranetable,...
          'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio', 'Feed Rate (m3/h)', 'Membrane Housing Cost (USD)'}); %Lookup table
     
-            PresVes.CCmemb = membranetable(x(5),4).*x(4);
-            PresVes.PresVes = membranetable(x(5),11).*x(4); 
+     %System Conditions
+        p_osm=1.9;
+        v_rinse=40/1000;% in m3  %40L per rinse
+        RR_sys=0.75; %recovery ratio is 75%
+        membReplRate=365/x(3);
+
+            CCmemb = membranetable(x(5),4).*x(4);
+            PresVes = membranetable(x(5),11).*x(4); 
             membrane_selected = membranetable(x(5),6);
             filtration_rate = membrane_selected*x(4);
             Qf_memb = membranetable(x(5),10);
@@ -243,7 +221,7 @@ CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
             p_psi = membranetable(x(5),5);
             p = p_psi .* 0.0689476;%pressure in bar
             A_mem = membranetable(x(5),7) %active membrane area is the area of the module
-            A=A_mem*num_membrane;%total active membrane area is the area of the module x number of modules
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
             CF=1/(1-RR_sys);%concentration factor
             p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
             Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
@@ -255,7 +233,7 @@ CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
         
         %% UV purification unit
         
-        PresVes.CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
+        CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
         uv_power = (14/1000); %KW
         
         %% Motor and Pump Selection for RO membrane
@@ -264,11 +242,11 @@ CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
       %  pumpmotor_table = array2table(pm,...
         % 'VariableNames',{'Option','Pump Cost (USD)', 'Pump Capacity (L/min)', 'Motor Cost (USD)', 'Voltage', 'FL AMPS'}); %Lookup table for pump and motor
       
-       PresVes.CCmotor = 1695; %https://www.globalindustrial.ca/p/motors/ac-motors-definite-purpose/pump-motors/baldor-motor-vejmm3311t-7-5-hp-1770-rpm
-       PresVes.motorReplRate=0.1;% [93] Amy's thesis
+       CCmotor = 1695; %https://www.globalindustrial.ca/p/motors/ac-motors-definite-purpose/pump-motors/baldor-motor-vejmm3311t-7-5-hp-1770-rpm
+       motorReplRate=0.1;% [93] Amy's thesis
        PumpEnergy = (7.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
-       PresVes.CCpump = 500; %Value not accurate
-       PresVes.pumpReplRate=0.1;% [93] Amy's thesis
+       CCpump = 500; %Value not accurate
+       pumpReplRate=0.1;% [93] Amy's thesis
        
    
    %% UF, MF or NF membrane selection 
@@ -297,35 +275,60 @@ CCpipes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
                
            end 
     end
+   
+[mass_as_used,Water_NotMetLOWP,Max_BattStor]=Combined_code(x,fit,sim_life, W,solarPower, waterday,PumpEnergy,Kw_init, A, p, p_osm, Qf,v_rinse);
+
+%% Energy System
+
+%Balance of System Costs
+% BOS_structural=(0.12*Wdc) %racking etc.
+% BOS_electrical=0.27*Wdc % Wholesale prices for conductors, switches,
+% combiners and transition boxes, as well as conduit, grounding equipment,
+% monitoring system or production meters, fuses, and breakers
+% 
+% http://www.nrel.gov/docs/fy16osti/66532.pdf -- page 14
+
+PV.BOS.CC=(0.12*(280)+0.27*280)*x(8);
+%Battery Capital Costs
+PV.Batt.CC=Max_BattStor*80; %Advanced Lead Acid Battery Storage is about $80/kWh in 2015 http://www.sciencedirect.com.myaccess.library.utoronto.ca/science/article/pii/B9780444637000000210 
+%Battery Replacement Costs
+%Assumed every 5 yrs based on 40,000 cycles to failure
+%conservative estimate some recent studies have shown they can last much
+%longer... ref?
+idisc=0.12;%discount rate
+PV_repl_prev=0;
+for i=5:5:20
+   PV.Batt.ReplCost= PV.Batt.CC/((1+idisc)^i)+PV_repl_prev;
+   PV_repl_prev=PV.Batt.ReplCost;
+end
 
 %% Filter and Filter Cartridge
-PresVes.CC_Filter=20+65.54;
+CC_Filter=20+65.54;
 %Filter: http://www.wateranywhere.com/product_info.php?products_id=10168
 %($20 USD)
 %Housing:
 %https://www.aquatell.ca/products/standard-water-filter-housing-kit-20-blue
 %($65.54 USD)
-PresVes.FilterCost=20;
-PresVes.FilterReplRate=1/12; %once every month
+FilterCost=20;
+FilterReplRate=1/12; %once every month
 
 %% Anti-scalant Delivery System
 if x(1)==1 %design variable 1, Anti-scalant selection = No Antiscalant
-    PresVes.CC_anti_sc=0;
+    CC_anti_sc=0;
     
 elseif x(1)==2 || x(1)==3 %design variable 1, Using Anti-scalant
-    PresVes.CC_anti_sc=42.51+14.99; 
+    CC_anti_sc=42.51+14.99; 
     % peristaltic pump cost (42.51 USD) & small anti-scalant tank (14.78)
     % http://www.williamson-shop.co.uk/100-series-with-dc-powered-motors-3586-p.asp
     % 20L container http://www.canadiantire.ca/en/pdp/reliance-rectangular-aqua-pak-water-container-0854035p.html#srp
 end
-
-PresVes.CC_components=PresVes.CCmemb+PresVes.PresVes+PresVes.CCpump+PresVes.CCmotor+PresVes.CC_Filter+PresVes.CC_anti_sc+PresVes.CCTank;
+CC_components=CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank;
 
 %Balance of System (piping, valves, filter housings)
-PresVes.CCpipes=0.1*PresVes.CC_components; %assumed from Amy's thesis
+CCpipes=0.1*CC_components; %assumed from Amy's thesis
 
-PresVes.CCpostchems=0.03*PresVes.CC_components;% post-treatment water re-mineralizing costs [102] Amy's Thesis
-PresVes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
+CCpostchems=0.03*CC_components;% post-treatment water re-mineralizing costs [102] Amy's Thesis
+postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
 
 %%Anualized costs since easier to add them up after... pg. 97-99 
 
@@ -353,11 +356,11 @@ PresVes.postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
 % the cost per year
     
 if x(1)==1 || x(1)==2 %if no antiscalant x(1)=0 then mass_as_used=0)
-    PresVes.Cost_as= (mass_as_used  *1.165 * 0.00352739619496)/sim_life; %Cost of Flocon 135
+    Cost_as= (mass_as_used  *1.165 * 0.00352739619496)/sim_life; %Cost of Flocon 135
     % Cost_as= mass_as_used * (1.165) * 0.00352739619496; %Cost of Flocon 135
     
 else
-    PresVes.Cost_as= (mass_as_used * 1.35 * 0.004629708)/sim_life; %Cost of Flocon 260
+    Cost_as= (mass_as_used * 1.35 * 0.004629708)/sim_life; %Cost of Flocon 260
     % Cost_as= mass_as_used * 1.35 * 0.004629708; %Cost of Flocon 260
 end
 
@@ -365,15 +368,12 @@ end
 disc_rate=0.12; % discount rate of 12% from http://heep.hks.harvard.edu/files/heep/files/dp35_meeks.pdf
 system_life=25; %25 years
 Equiv_Ann_cost_factor=(disc_rate*(1+disc_rate)^system_life)/(((1+disc_rate)^system_life)-1);
-PresVes.AnnCostsRepl=PresVes.CCmemb*PresVes.membReplRate+PresVes.FilterCost*PresVes.FilterReplRate+PresVes.CCpump*PresVes.pumpReplRate+PresVes.CCmotor*PresVes.motorReplRate+PresVes.CCpostchems*PresVes.postchemsReplRate;
+AnnCostsRepl=CCmemb*membReplRate+FilterCost*FilterReplRate+CCpump*pumpReplRate+CCmotor*motorReplRate+CCpostchems*postchemsReplRate;
 
 AnnCost=(solarCost+PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost+wind_cost)*Equiv_Ann_cost_factor;
 
-PresVes.AnnCostCC=(PresVes.CCmemb+PresVes.PresVes+PresVes.CCpump+PresVes.CCmotor+PresVes.CC_Filter+PresVes.CC_anti_sc+PresVes.CCTank+PresVes.CCpipes)*Equiv_Ann_cost_factor;
+AnnCostCC=(CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank+CCpipes)*Equiv_Ann_cost_factor;
 
-PVRO.AnnTotal=AnnCost+PresVes.AnnCostCC+PresVes.AnnCostsRepl+PresVes.Cost_as;
+PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as;
 
 PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMetLOWP-LOWP_Global));
-
-
-
