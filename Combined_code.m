@@ -2,7 +2,7 @@
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
 %Last Updated: July 9, 2020
 
-function [mass_as_used,Water_NotMet,Qf_memb,Max_BattStor,wind_speed, PV_power]=Combined_code(x,FFfit,system_life,W, solarPower, waterday)
+function [mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x,FFfit,system_life,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse)
 
 DailyVol=waterday;
 
@@ -45,10 +45,7 @@ Dose_F260 = 3.9; % in mg/L Dose rate for anti-scalant based on Flocon calculator
 density_F260=1.35e-3; % in mg/mL Flocon 260 density = 1.35±0.05 g/cm3
 as_dose_f260 = Dose_F260 * 1000 * (1/density_F260); %converted to mL / m3 for ease of calculations
 
-%System Conditions
-p_osm=1.9;
-v_rinse=40/1000;% in m3  %40L per rinse
-RR_sys=0.75; %recovery ratio is 75%
+
 
 %% Design Variables
 if x(1)==1 %design variable 1, Anti-scalant selection = No Antiscalant
@@ -66,7 +63,23 @@ rinse=x(2); % rinsing [ NoRinse (1), Rinse (2) ]
 time_to_replace=x(3); % time to replace membrane in days (continuous integer variable)
 num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7(7), 8(8), 9(9), 10 (10)]
 
+
+
+%% Water tank size and cost
+%Water tanks purchased from: https://www.tank-depot.com/product.aspx?id=3242
+%For larger communities - make the assumption that at least 50% of the water required for the whole community is on hand
+
+ wt = [158.99	100.00; 230.99	160; 191.00	200; 247.00	250; 241.65	300; 356.00	350; 363.00	400; 377.99	450; 337.99	500; 369.23	550; 381.00	600; 386.78	650; 409.73	700; 517.99	750; 624.00	800;...
+     629.78	850; 568.00	900; 567.00	1000; 707.99	1050; 557.99	1100; 772.20	1150; 535.28	1200; 849.00	1300; 755.00	1350; 822.25	1480; 708.99	1500; 682.00	1550; 707.99	1600; 844.00 1650;...
+     863.00	1700; 979.84	1750; 1477.00	1900; 916.00	2000; 1397.99	2050; 878.99	2100; 1102.28	2200; 1297.99	2400; 904.00	2500; 908.00 2550; 978.89 2600; 1107.00	2700; 1157.14	2800; 1121.00	3000; 1400.70	3060; 1240.65	3100;...
+     1417.50	3200; 1997.99	3400; 1897.43	4000; 2388.99	4100; 2997.99	4200; 2268.00	4500; 3388.99	4700; 1948.00	5000; 2292.99	5050; 2499.00	5100; 3579.00	6000; 3658.87	6250; 3939.99	6400; 3197.00	6500; 3180.99	6600;...
+     4997.99	7000; 4498.99	7750; 5697.99	7800; 4971.99	8000; 6597.99	9150; 7597.99	9500; 5822.00	10000; 7158.00	10500; 6679.99	11000; 7549.99	12000; 9694.99	12500; 10882.00	12500; 12516.00	15000; 10468.99	15500; 19980.00	20000];
+
+ watertank = array2table(wt,...
+    'VariableNames',{'Cost (USD)', 'Capacity (Gallons)'}); %Lookup table for water tanks
+
 tank_vol_options = wt(x(6),2); %tank volume options for the design variable
+max_tank_vol = tank_vol_options;
 
 num_panel=x(7);% number of pv panels [1-50]
 mod_pp = x(8); % model of the solar panel selected [1-9]
@@ -197,6 +210,7 @@ for i=1:simulation_day
             %Battery
             PV_E_dif(i,s)=Energy_hourly(i,s)-Pump_EnergyReqt;
             Power_use(i,s)=-Pump_EnergyReqt;
+            %add in the uv power?
             
             num_hours_run=num_hours_run+1;
         else
@@ -261,6 +275,7 @@ locate_max=find(BattStorageReqt_Max_Min==max(BattStorageReqt_Max_Min));
 
 Min_BattStor=min(BattStorageReqt_Max_Min);
 locate_min=find(BattStorageReqt_Max_Min==Min_BattStor);
+
 
 % Reshaping and Visualizing Data to test the simulation
 %{
