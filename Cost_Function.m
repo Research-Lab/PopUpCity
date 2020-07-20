@@ -99,30 +99,39 @@ end
 %x(7)= randi(50);
     if x(8)== 1
         solarPower=(((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(1,3).* x(7);
     elseif x(8)==2
         solarPower=(((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(2,3).* x(7);
     elseif x(8)==3
         solarPower=(((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(3,3).* x(7);
     elseif x(8)==4
         solarPower=(((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(4,3).* x(7);
     elseif x(8)==5
         solarPower=(((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(5,3).* x(7);
     elseif x(8)==6
         solarPower=(((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(6,3).* x(7);
     elseif x(8)==7
         solarPower=(((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(7,3).* x(7);
     elseif x(8)==8
         solarPower=(((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)* x(7);
+        disp (solarPower);
         solarCost= SP(8,3).* x(7);
     elseif x(8)==9
         solarPower=(((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)* x(7); 
+        disp (solarPower);
         solarCost= SP(9,3).* x(7);
     end
     
@@ -377,3 +386,7 @@ AnnCostCC=(CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank+CCpipes)*Eq
 PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as;
 
 PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMetLOWP-LOWP_Global));
+
+
+
+
