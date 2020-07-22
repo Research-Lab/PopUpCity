@@ -86,7 +86,7 @@ end
 %% Lookup Table for solar panels
     SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
         4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
-       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72];
+       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72; 10 0 0 0 0 0 0 0];
     % Creates the array with all the key information about each solar panel
     
     SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
@@ -99,39 +99,43 @@ end
 %x(7)= randi(50);
     if x(8)== 1
         solarPower=(((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(1,3).* x(7);
     elseif x(8)==2
         solarPower=(((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(2,3).* x(7);
     elseif x(8)==3
         solarPower=(((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(3,3).* x(7);
     elseif x(8)==4
         solarPower=(((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(4,3).* x(7);
     elseif x(8)==5
         solarPower=(((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(5,3).* x(7);
     elseif x(8)==6
         solarPower=(((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(6,3).* x(7);
     elseif x(8)==7
         solarPower=(((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(7,3).* x(7);
     elseif x(8)==8
         solarPower=(((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)* x(7);
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(8,3).* x(7);
     elseif x(8)==9
         solarPower=(((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)* x(7); 
-        disp (solarPower);
+        disp (sum(solarPower), 'Total power obtained (KW)' );
+        solarCost= SP(9,3).* x(7);
+    elseif x(8)==10 %No Solar Selected
+        solarPower=(((SP(10,2)/100).*SP(10,4).*PV_power.*SP(10,5))/1000)* x(7); 
+        disp (sum(solarPower), 'No Solar Panel was selected');
         solarCost= SP(9,3).* x(7);
     end
     
@@ -139,7 +143,7 @@ end
 
 %run('V6');
 %% Lookup table for wind turbines
-Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000];
+Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
 WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
 %% Power curves for different wind turbines
@@ -166,6 +170,11 @@ elseif x(9) == 3 %WT2
 elseif x(9) == 4 %WT2
     W = -(0.1141)*wind_speed.^(5)+(3.8867)*wind_speed.^(4)-(46.667)*wind_speed.^(3)+(263.39)*wind_speed.^(2)-402.08*wind_speed+67.197;
     display(sum(W)/1000, 'Total Power obtained using Mobisun 5000kW(kW)/year')   
+    wind_cost = Windturbines(x(9),8);
+
+elseif x(9) == 5 %No turbine selected 
+    W = 0*wind_speed;
+    display(sum(W)/1000, 'No Wind Turbine was selected')   
     wind_cost = Windturbines(x(9),8);
 end
 %end
@@ -386,7 +395,6 @@ AnnCostCC=(CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank+CCpipes)*Eq
 PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as;
 
 PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMetLOWP-LOWP_Global));
-
 
 
 
