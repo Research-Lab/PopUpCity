@@ -17,7 +17,7 @@
                       %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
 % Design Variable 8 = Model of Solar Panel
 % Design Variable 9 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
-%x(9)= randi(4); %for testing
+%x(9)= randi(5); %for testing
 
 %% Optimization
 
@@ -62,7 +62,7 @@ PV_power = SolarIn;
     %% Lookup Table for solar panels 
     SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
         4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
-       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72];
+       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72;10 0 0 0 0 0 0 0];
     % Creates the array with all the key information about each solar panel
     
     SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
@@ -80,10 +80,12 @@ else
     promptf = 'Please enter the column which contains the hourly wind data \n';
     f = input(promptf);
     data = xlsread(fullfile(path, file));
-    wind_speed_kmhr = data(:, f);
+    %wind_speed_kmhr = data(:, f);
+    wind_speed = data(:, f);
+
 end
     %% weibull plot
-wind_speed = wind_speed_kmhr.*(1000./3600); %meters per second %for 73 days
+%wind_speed = wind_speed_kmhr.*(1000./3600); %meters per second %for 73 days
 wind_speed_weibull = wind_speed(1:1750, 1); 
 wb = fitdist(wind_speed_weibull, 'weibull');
 disp(wb) 
@@ -105,7 +107,7 @@ Theoretical_total_power_output = sum(Power_per_wind_speed(:)); %watts/m^2
 display(Theoretical_total_power_output/1000, 'Theoretical power output in 73 days (kwatts/m^2)');
 
     %% Lookup table for wind turbines
-Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000];
+Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
 WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
 %We can add more wind turbines in our array
@@ -172,9 +174,9 @@ memb_repl=zeros(1,iter);
 %cost=zeros(3,9);
 %exitcond=zeros(3,9);
 Fract=0.3;
-ps=comnum;%popsize
+ps=150;
 maxml=365*5;%max membrane life  
-x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(9,ps,1), randi(4,ps,1)];
+x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(10,ps,1), randi(5,ps,1)];
 
 x_opt_manual=zeros(iter,9);
 
@@ -197,10 +199,10 @@ for i=1:iter
     
    %DailyVol=5;%m3/day
    sim_yrs=5;
-   LOWP_Global=i/100;
+   LOWP_Global=0.01;
     
 %    DailyVol=i;
-[x_opt_cf(i,:),cost(i),exitcond(i)] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 4],[],[1;2;3;4;5;6;7;8;9],options);     
+[x_opt_cf(i,:),cost(i),exitcond(i)] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 10;5],[],[1;2;3;4;5;6;7;8;9],options);     
 %[x_opt_cf_ga(i,:),cost_ga(i),exitcond_ga(i)] = ga(@(x) FindCost_PenFun(x,DailyVol,LOWP_Global,Penalty_Glob,PVpower),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 6; 2; 3; 23; 50],[],[1;2;3;4;5;6;7;8],options);
 %     save('GA_Oct16_2m3perday_5yrMaxML_variablePop_SimLife10yr_iter.mat');
 
@@ -229,11 +231,10 @@ x_opt_manual(i,3)=memb_repl(i);
 [mass_as(i), LOWP(i), Qf_mem(i), BattStor(i)]=Combined_code(x_opt_manual(i,:), FFfit,sim_yrs,Energy_sum);
 
 %save the workspace
-save('GA+manl_Nov6_Mex_midfit_10m3perday_5yrMaxML_5yrSimLife10yr_Pop150_Penalty5_1-10LOWP_TolFun1E-2_TolCon1E-10.mat');
+save('GA_Victoria_test.mat');
 
 %create new starting vector for optimization
-x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(9,ps,1), randi(4,ps,1)];
+x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(10,ps,1), randi(5,ps,1)];
 
 end
 toc
-
