@@ -83,7 +83,7 @@ end
 
 %run('Solar_panels');
 
-%% Lookup Table for solar panels
+    % Lookup Table for solar panels
     SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
         4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
        7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72; 10 0 0 0 0 0 0 0];
@@ -94,59 +94,60 @@ end
     
 
 
-%% IF statements for the GA
+    % IF statements for the GA - Solar Panels 
 %x(8)= randi(9); %for testing
 %x(7)= randi(50);
     if x(8)== 1
         solarPower=(((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)');
         solarCost= SP(1,3).* x(7);
     elseif x(8)==2
         solarPower=(((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(2,3).* x(7);
     elseif x(8)==3
         solarPower=(((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)');
         solarCost= SP(3,3).* x(7);
     elseif x(8)==4
         solarPower=(((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(4,3).* x(7);
     elseif x(8)==5
         solarPower=(((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(5,3).* x(7);
     elseif x(8)==6
         solarPower=(((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(6,3).* x(7);
     elseif x(8)==7
         solarPower=(((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(7,3).* x(7);
     elseif x(8)==8
         solarPower=(((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)* x(7);
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)');
         solarCost= SP(8,3).* x(7);
     elseif x(8)==9
         solarPower=(((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)* x(7); 
-        disp (sum(solarPower), 'Total power obtained (KW)' );
+        display(sum(solarPower), 'Total power obtained (KW)' );
         solarCost= SP(9,3).* x(7);
     elseif x(8)==10 %No Solar Selected
         solarPower=(((SP(10,2)/100).*SP(10,4).*PV_power.*SP(10,5))/1000)* x(7); 
-        disp (sum(solarPower), 'No Solar Panel was selected');
+        display(sum(solarPower), 'No Solar Panel was selected');
         solarCost= SP(9,3).* x(7);
     end
     
 %% Wind code
 
 %run('V6');
-%% Lookup table for wind turbines
-Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
+    % Lookup table for wind turbines
+Windturbines = [1 350 12.5 3.5 0 50 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
 WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
-%% Power curves for different wind turbines
+    
+% Power curves for different wind turbines
 %x(9)= randi(4); %for testing
 %x(10) = Model of WT [Superwind350(1), Mobisun 1kW(2),Mobisun 3kW(3), Mobisun 5kW(4)]
 %need to introduce x(13) in the combined
@@ -156,21 +157,46 @@ if x(9) == 1 %WT1
     %Total_power_output = sum(W1)/1000;
     display(sum(W)/1000, 'Total Power obtained using SuperWind350(kW)/year')
     wind_cost = Windturbines(x(9),8);
+    wind_survival = Windturbines(x(9),6); 
+    if wind_speed > wind_survival;
+         W = 0*wind_speed;
+        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
+        wind_cost = 0;
+    end
    
 elseif x(9) == 2 %WT2
     W = (0.011)*wind_speed.^(6)-(0.6033)*wind_speed.^(5)+(12.75)*wind_speed.^(4)-(131.99)*wind_speed.^(3)+(702.6)*wind_speed.^(2)-1740.3*wind_speed+1572.6;
     display(sum(W)/1000, 'Total Power obtained using Mobisun 1000kW(kW)/year')
     wind_cost = Windturbines(x(9),8);
+    wind_survival = Windturbines(x(9),6); 
+    if wind_speed > wind_survival;
+       W = 0*wind_speed;
+       display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
+       wind_cost = 0;
+    end
+   
 
 elseif x(9) == 3 %WT2
     W = -(0.069)*wind_speed.^(5)+(2.3178)*wind_speed.^(4)-(27.455)*wind_speed.^(3)+(153.8)*wind_speed.^(2)-231.99*wind_speed+37.767;
     display(sum(W)/1000, 'Total Power obtained using Mobisun 3000kW(kW)/year')   
     wind_cost = Windturbines(x(9),8);
+    wind_survival = Windturbines(x(9),6); 
+    if wind_speed > wind_survival;
+         W = 0*wind_speed;
+        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
+        wind_cost = 0;
+    end
 
 elseif x(9) == 4 %WT2
     W = -(0.1141)*wind_speed.^(5)+(3.8867)*wind_speed.^(4)-(46.667)*wind_speed.^(3)+(263.39)*wind_speed.^(2)-402.08*wind_speed+67.197;
     display(sum(W)/1000, 'Total Power obtained using Mobisun 5000kW(kW)/year')   
     wind_cost = Windturbines(x(9),8);
+    wind_survival = Windturbines(x(9),6); 
+    if wind_speed > wind_survival;
+         W = 0*wind_speed;
+        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
+        wind_cost = 0;
+    end
 
 elseif x(9) == 5 %No turbine selected 
     W = 0*wind_speed;
@@ -208,21 +234,19 @@ CCTank = wt(x(6),1);
     %UF membranes from: https://www.wateranywhere.com/membranes/ultrafiltration-uf-membranes/polyethersulfone-uf-membranes/
     %MF membranes from: https://www.wateranywhere.com/membranes/microfiltration-mf-membranes/pvdf-microfiltration-membranes/
     %Membrane housing from: https://www.wateranywhere.com/catalogsearch/result/?q=membrane+housing
-    %Pump from: https://www.hydra-cell.com/product/H25-hydracell-pump.html
-    %Motor from: https://www.globalindustrial.ca/g/motors/ac-motors-definite-purpose/pump-motors/baldor-3-phase-pump-motors
     %UV Purifier from: https://www.freshwatersystems.com/collections/uv-water-purification?refinementList%5Bnamed_tags.System%20Class%5D%5B0%5D=Commercial%20Systems
 
     
    %% RO membrane selection
     
-    if salinity > 60 %If it is above 60mg/l then the system will choose an RO membrane from the RO lookup table
+if salinity > 60 %If it is above 60mg/l then the system will choose an RO membrane from the RO lookup table
        
             membranetable = [1	2.5	40	182	600	45	850	28	0.15 1.4 67; 2	4	14	173	600	45	525	20	0.05 3.2 114; 3	4	21	194	600	45	900	36	0.08 3.2 137; 4	4	40	247	600	45	2625	78	0.15 3.2 130];
 
             membrane = array2table(membranetable,...
          'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio', 'Feed Rate (m3/h)', 'Membrane Housing Cost (USD)'}); %Lookup table
     
-     %System Conditions
+%System Conditions
         p_osm=1.9;
         v_rinse=40/1000;% in m3  %40L per rinse
         RR_sys=0.75; %recovery ratio is 75%
@@ -249,12 +273,15 @@ CCTank = wt(x(6),1);
         %RO_selected = RO(:,6);
         %RO_selected
         
-        %% UV purification unit
+% UV purification unit
         
         CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
         uv_power = (14/1000); %KW
         
-        %% Motor and Pump Selection for RO membrane
+% Motor and Pump Selection for RO membrane
+    %Pump from: https://www.hydra-cell.com/product/H25-hydracell-pump.html
+    %Motor from: https://www.globalindustrial.ca/g/motors/ac-motors-definite-purpose/pump-motors/baldor-3-phase-pump-motors
+    
         % pm = [1 500 69 2737 230 35.4; 2	500	63	2737 230 35.4; 3	500	50	1835 230 12.5; 4	500	36	1695 230 9.6];
 
       %  pumpmotor_table = array2table(pm,...
@@ -263,12 +290,12 @@ CCTank = wt(x(6),1);
        CCmotor = 1695; %https://www.globalindustrial.ca/p/motors/ac-motors-definite-purpose/pump-motors/baldor-motor-vejmm3311t-7-5-hp-1770-rpm
        motorReplRate=0.1;% [93] Amy's thesis
        PumpEnergy = (7.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
-       CCpump = 500; %Value not accurate
+       CCpump = 8532; 
        pumpReplRate=0.1;% [93] Amy's thesis
        
    
    %% UF, MF or NF membrane selection 
-    elseif salinity < 60 %If it is below 60mg/l then the sysetm will choose either an UF or MF membrane
+elseif salinity < 60 %If it is below 60mg/l then the sysetm will choose either an UF or MF membrane
      
         
           %DOC = xlsread(fullfile(path,file),DOC:DOC); %Matlab reads the Dissolved organic content value
@@ -281,16 +308,99 @@ CCTank = wt(x(6),1);
 
                     membrane = array2table(MF,...
                    'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio'});
+%{
+%System Conditions
+        p_osm=1.9;
+        v_rinse=40/1000;% in m3  %40L per rinse
+        RR_sys=0.75; %recovery ratio is 75%
+        membReplRate=365/x(3);
 
-           elseif DOC > 50 %If it is above 50 then the system will chose a UF membrane from lookup table (this value is not accurate)
-               
+            CCmemb = membranetable(x(5),4).*x(4);
+            PresVes = membranetable(x(5),11).*x(4); 
+            membrane_selected = membranetable(x(5),6);
+            filtration_rate = membrane_selected*x(4);
+            Qf_memb = membranetable(x(5),10);
+            RR_spec = membranetable(x(5),9);
+            Kw_init = 0.004533031; 
+            Qf_sys = membranetable(x(5),10);
+            p_psi = membranetable(x(5),5);
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = membranetable(x(5),7) %active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
+            Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+% UV purification unit
+        
+        CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
+        uv_power = (14/1000); %KW
+        
+% Motor and Pump Selection for RO membrane
+        % pm = [1 500 69 2737 230 35.4; 2	500	63	2737 230 35.4; 3	500	50	1835 230 12.5; 4	500	36	1695 230 9.6];
+
+      %  pumpmotor_table = array2table(pm,...
+        % 'VariableNames',{'Option','Pump Cost (USD)', 'Pump Capacity (L/min)', 'Motor Cost (USD)', 'Voltage', 'FL AMPS'}); %Lookup table for pump and motor
+      
+       CCmotor = 1695; %https://www.globalindustrial.ca/p/motors/ac-motors-definite-purpose/pump-motors/baldor-motor-vejmm3311t-7-5-hp-1770-rpm
+       motorReplRate=0.1;% [93] Amy's thesis
+       PumpEnergy = (7.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+       CCpump = 8532; %Value not accurate
+       pumpReplRate=0.1;% [93] Amy's thesis
+           
+%}
+
+elseif DOC > 50 %If it is above 50 then the system will chose a UF membrane from lookup table (this value is not accurate)
+
              
             
                  UF = [1 1.8	12	44	150	60; 2 1.8	21	256	150	60; 3 2.5	40	283	150	60];
         
                    membrane = array2table(UF,...
                  'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio'});  
-               
+%{
+%System Conditions
+        p_osm=1.9;
+        v_rinse=40/1000;% in m3  %40L per rinse
+        RR_sys=0.75; %recovery ratio is 75%
+        membReplRate=365/x(3);
+
+            CCmemb = membranetable(x(5),4).*x(4);
+            PresVes = membranetable(x(5),11).*x(4); 
+            membrane_selected = membranetable(x(5),6);
+            filtration_rate = membrane_selected*x(4);
+            Qf_memb = membranetable(x(5),10);
+            RR_spec = membranetable(x(5),9);
+            Kw_init = 0.004533031; 
+            Qf_sys = membranetable(x(5),10);
+            p_psi = membranetable(x(5),5);
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = membranetable(x(5),7) %active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
+            Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+% UV purification unit
+        
+        CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
+        uv_power = (14/1000); %KW
+        
+% Motor and Pump Selection for RO membrane
+        % pm = [1 500 69 2737 230 35.4; 2	500	63	2737 230 35.4; 3	500	50	1835 230 12.5; 4	500	36	1695 230 9.6];
+
+      %  pumpmotor_table = array2table(pm,...
+        % 'VariableNames',{'Option','Pump Cost (USD)', 'Pump Capacity (L/min)', 'Motor Cost (USD)', 'Voltage', 'FL AMPS'}); %Lookup table for pump and motor
+      
+       CCmotor = 1695; %https://www.globalindustrial.ca/p/motors/ac-motors-definite-purpose/pump-motors/baldor-motor-vejmm3311t-7-5-hp-1770-rpm
+       motorReplRate=0.1;% [93] Amy's thesis
+       PumpEnergy = (7.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+       CCpump = 8532; %Value not accurate
+       pumpReplRate=0.1;% [93] Amy's thesis
+           
+%}
            end 
     end
    

@@ -47,7 +47,7 @@ waterday = comnum*200*0.264; %Number of members in the community * 200L (pop up 
 
 
 %% Read in Solar Data
-    %% User imput
+    % User imput
 fprintf ('Please select a solar data excel file \n');
 [file,path,indx] = uigetfile('*.xlsx'); %Reads in a user selected excel sheet
 if isequal(file,0)
@@ -59,7 +59,7 @@ else %If a user selects an excel sheet it will run through the solar simulation 
     SolarIn = data(:,c);
 end
 PV_power = SolarIn;
-    %% Lookup Table for solar panels 
+    % Lookup Table for solar panels 
     SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
         4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
        7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72;10 0 0 0 0 0 0 0];
@@ -71,21 +71,26 @@ PV_power = SolarIn;
     disp (SolarPanels);  %Displays the Lookup Table
    
 %% Read in Wind Data 
-    %% User Inputs the file
+    % User Inputs the file
 fprintf(' Please input the wind data excel file \n');
 [file, path, indx] = uigetfile('*.xlsx');
 if isequal(file, 0)
     disp('User selected Cancel')   
 else 
     promptf = 'Please enter the column which contains the hourly wind data \n';
+    prompth = 'If wind data is in km/h, enter 1, or if data is in m/s, enter 2 \n';
     f = input(promptf);
+    h = input(prompth);
     data = xlsread(fullfile(path, file));
-    %wind_speed_kmhr = data(:, f);
-    wind_speed = data(:, f);
+        if h == 1;
+           wind_speed_kmhr = data(:, f); 
+           wind_speed = wind_speed_kmhr.*(1000./3600); %meters per second %for 73 days
+        elseif h == 2;
+            wind_speed = data(:, f);
+        end 
 
 end
-    %% weibull plot
-%wind_speed = wind_speed_kmhr.*(1000./3600); %meters per second %for 73 days
+    % weibull plot
 wind_speed_weibull = wind_speed(1:1750, 1); 
 wb = fitdist(wind_speed_weibull, 'weibull');
 disp(wb) 
@@ -97,7 +102,7 @@ disp(wb)
 %figure
 %probplot('Weibull',wind_speed_weibull)
 
-    %% calculating the power at each wind speed per unit area
+    % calculating the power at each wind speed per unit area
 rho_air = 1.225; %kg/m^3
 Probability_Density_Function = wblpdf(wind_speed_weibull, wb.a, wb.b);
 %multiplying the power output by density function representing the period
@@ -106,8 +111,8 @@ Power_per_wind_speed = 0.5.*rho_air.*Probability_Density_Function.*wind_speed_we
 Theoretical_total_power_output = sum(Power_per_wind_speed(:)); %watts/m^2
 display(Theoretical_total_power_output/1000, 'Theoretical power output in 73 days (kwatts/m^2)');
 
-    %% Lookup table for wind turbines
-Windturbines = [1 350 12.5 3.5 0 0 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
+    % Lookup table for wind turbines
+Windturbines = [1 350 12.5 3.5 0 50 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
 WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
 %We can add more wind turbines in our array

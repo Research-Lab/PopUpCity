@@ -82,8 +82,8 @@ tank_vol_options = wt(x(6),2); %tank volume options for the design variable
 max_tank_vol = tank_vol_options;
 
 num_panel=x(7);% number of pv panels [1-50]
-mod_pp = x(8); % model of the solar panel selected [1-9]
-mod_wind = x(9); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
+mod_pp = x(8); % model of the solar panel selected [1-10]
+mod_wind = x(9); %Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4), 5(0)]
 
 
 %% Initialization of Values
