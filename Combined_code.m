@@ -80,6 +80,7 @@ num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7
 
 tank_vol_options = wt(x(6),2); %tank volume options for the design variable
 max_tank_vol = tank_vol_options;
+CCTank = wt(x(6),1);
 
 num_panel=x(7);% number of pv panels [1-50]
 mod_pp = x(8); % model of the solar panel selected [1-10]

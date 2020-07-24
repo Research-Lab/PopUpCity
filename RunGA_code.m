@@ -192,7 +192,7 @@ FFfit=[ 0.5371,3.752,6.024,-0.027385333];%mid% AC & Rinse
     options = gaoptimset('PopulationSize', ps,'Generations', 150,'EliteCount', 1, ...
         'CrossoverFraction',Fract,...
         'TolFun', 1E-2,'TolCon', 1E-10,'Display','iter','PlotFcns',@gaplotbestf,...
-        'InitialPopulation', x0,'PlotFcns',@gaplotbestindiv);
+        'InitialPopulation', x0,'PlotFcns',@gaplotbestindiv, 'PlotFcns', @gaplotscores);
 
 %Oct25 - changed options gaoptimset 'TolFun',1, to 'TolFun',1E-2
 
@@ -225,7 +225,7 @@ Penalty_Glob=5;
     %counter=counter+1;
     
     %x_opt_manual=k;
-    Cost_manual=Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
+    Cost_manual=Cost_Function(x_opt_manual,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
     
 %end
 %{
@@ -238,6 +238,8 @@ x_opt_manual(i,3)=memb_repl(i);
 
 %save the workspace
 save('GA_Victoria_test.mat');
+
+
 
 %create new starting vector for optimization
 %x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(10,ps,1), randi(5,ps,1)];

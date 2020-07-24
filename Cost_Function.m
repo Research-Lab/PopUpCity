@@ -224,7 +224,7 @@ end
 %tank_vol_options = wt(x(6),2); %tank volume options for the design variable
 %DailyVol=tank_vol_options;
 % penalty function for tanks
-
+tank_vol_options = wt(x(6),2);
 CCTank = wt(x(6),1);
 
 
