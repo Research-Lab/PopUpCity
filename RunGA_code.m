@@ -117,6 +117,23 @@ WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rate
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
 %We can add more wind turbines in our array
 
+%% Water tank size and cost lookup table
+%Water tanks purchased from: https://www.tank-depot.com/product.aspx?id=3242
+%For larger communities - make the assumption that at least 50% of the water required for the whole community is on hand
+
+ wt = [158.99	100; 230.99	160; 191.00	200; 247	250; 241.65	300; 356.00	350; 363.00	400; 377.99	450; 337.99	500; 369.23	550; 381.00	600; 386.78	650; 409.73	700; 517.99	750; 624.00	800;...
+     629.78	850; 568.00	900; 567.00	1000; 707.99	1050; 557.99	1100; 772.20	1150; 535.28	1200; 849.00	1300; 755.00	1350; 822.25	1480; 708.99	1500; 682.00	1550; 708	1600; 844.00 1650;...
+     863.00	1700; 979.84	1750; 1477.00	1900; 916.00	2000; 1397.99	2050; 878.99	2100; 1102.28	2200; 1297.99	2400; 904.00	2500; 908.00 2550; 978.89 2600; 1107.00	2700; 1157.14	2800; 1121.00	3000; 1400.70	3060; 1240.65	3100;...
+     1417.50	3200; 1997.99	3400; 1897.43	4000; 2388.99	4100; 2997.99	4200; 2268.00	4500; 3388.99	4700; 1948.00	5000; 2292.99	5050; 2499.00	5100; 3579.00	6000; 3658.87	6250; 3939.99	6400; 3197.00	6500; 3180.99	6600;...
+     4997.99	7000; 4498.99	7750; 5697.99	7800; 4971.99	8000; 6597.99	9150; 7597.99	9500; 5822.00	10000; 7158.00	10500; 6679.99	11000; 7549.99	12000; 9694.99	12500; 10882.00	12500; 12516.00	15000; 10468.99	15500; 19980.00	20000];
+
+ watertank = array2table(wt,...
+    'VariableNames',{'Cost (USD)', 'Capacity (Gallons)'}); %Lookup table for water tanks
+
+%tank_vol_options = wt(x(6),2); %tank volume options for the design variable
+%DailyVol=tank_vol_options;
+% penalty function for tanks
+
 %% Filtration Membrane look up tables
   %% RO membrane selection
     
@@ -225,7 +242,7 @@ Penalty_Glob=5;
     %counter=counter+1;
     
     %x_opt_manual=k;
-    Cost_manual=Cost_Function(x_opt_manual,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
+    Cost_manual=Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
     
 %end
 %{

@@ -79,7 +79,6 @@ num_membrane=x(4); % # of membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7
     'VariableNames',{'Cost (USD)', 'Capacity (Gallons)'}); %Lookup table for water tanks
 
 tank_vol_options = wt(x(6),2); %tank volume options for the design variable
-max_tank_vol = tank_vol_options;
 CCTank = wt(x(6),1);
 
 num_panel=x(7);% number of pv panels [1-50]
@@ -225,15 +224,15 @@ for i=1:simulation_day
         %Tank Volume
         
         if tank_full ==1 % dont add the water Qp(i,s) to the tank
-            tank_vol(i,s)= max_tank_vol-water_demand(s)-rinsing(i,s);
-            if tank_vol(i,s)< max_tank_vol
+            tank_vol(i,s)= tank_vol_options-water_demand(s)-rinsing(i,s);
+            if tank_vol(i,s)< tank_vol_options
                 tank_full=0;
             else
                 tank_full=1;
             end
             
         else %  tank_full ==0 % tank is not full, add the Qp(i,s)*t to the tank
-            tank_vol(i,s)=min(tank_vol_prev+Qp(i,s)*deltat-water_demand(s)-rinsing(i,s),max_tank_vol);
+            tank_vol(i,s)=min(tank_vol_prev+Qp(i,s)*deltat-water_demand(s)-rinsing(i,s),tank_vol_options);
         end
             %anti-scalant volume
             mass_as(i,s)=as_dose*((Qf*deltat)/1000);%determine the mass of anti-scalant based on the feed water volume in that time step
