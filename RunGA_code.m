@@ -42,7 +42,7 @@ promptcom = 'How many members are in the community? \n '; %Finds out how many me
     promptb = 'Please enter the amount of dissolved organic content in the water \n'; %User inputs DOC level
           DOC = input(promptb);
 
-waterday = comnum*200*0.264; %Number of members in the community * 200L (pop up city) = amount of water needed to be collected per day (in Gallons)
+waterday = comnum*200; %Number of members in the community * 200L (pop up city) = amount of water needed to be collected per day (in Liters)
 %extrapower = comnum*1.5; %Number of members in the community * 1.5kW (pop up city)
 
 
@@ -119,16 +119,15 @@ WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rate
 
 %% Water tank size and cost lookup table
 %Water tanks purchased from: https://www.tank-depot.com/product.aspx?id=3242
-%For larger communities - make the assumption that at least 50% of the water required for the whole community is on hand
 
- wt = [158.99	100; 230.99	160; 191.00	200; 247	250; 241.65	300; 356.00	350; 363.00	400; 377.99	450; 337.99	500; 369.23	550; 381.00	600; 386.78	650; 409.73	700; 517.99	750; 624.00	800;...
-     629.78	850; 568.00	900; 567.00	1000; 707.99	1050; 557.99	1100; 772.20	1150; 535.28	1200; 849.00	1300; 755.00	1350; 822.25	1480; 708.99	1500; 682.00	1550; 708	1600; 844.00 1650;...
-     863.00	1700; 979.84	1750; 1477.00	1900; 916.00	2000; 1397.99	2050; 878.99	2100; 1102.28	2200; 1297.99	2400; 904.00	2500; 908.00 2550; 978.89 2600; 1107.00	2700; 1157.14	2800; 1121.00	3000; 1400.70	3060; 1240.65	3100;...
-     1417.50	3200; 1997.99	3400; 1897.43	4000; 2388.99	4100; 2997.99	4200; 2268.00	4500; 3388.99	4700; 1948.00	5000; 2292.99	5050; 2499.00	5100; 3579.00	6000; 3658.87	6250; 3939.99	6400; 3197.00	6500; 3180.99	6600;...
-     4997.99	7000; 4498.99	7750; 5697.99	7800; 4971.99	8000; 6597.99	9150; 7597.99	9500; 5822.00	10000; 7158.00	10500; 6679.99	11000; 7549.99	12000; 9694.99	12500; 10882.00	12500; 12516.00	15000; 10468.99	15500; 19980.00	20000];
+ wt = [158.99	0.3758; 230.99	0.6056; 191.00	0.757; 247.00	0.94625; 241.65	1.1355; 356.00	1.32475; 363.00	1.514; 377.99	1.70325; 337.99	1.8925; 369.23	2.08175; 381.00	2.271; 386.78	2.46025; 409.73	2.6495; 517.99	2.83875;...
+     624.00	3.028; 629.78	3.21725; 568.00	3.4065; 567.00	3.785; 707.99	3.97425; 557.99	4.1635; 772.20	4.35275; 535.28	4.542; 849.00	4.9205; 755.00	5.10975; 822.25	5.6018; 708.99	5.6775; 682.00	5.86675; 707.99	6.056; 844.00	6.24525; 863.00	6.4345; 979.84	6.62375;...
+     1477.00	7.1915; 916.00	7.57; 1397.99	7.75925; 878.99	7.9485; 1102.28	8.327; 1297.99	9.084; 904.00	9.4625; 908.00	9.65175; 978.89	9.841; 1107.00	10.2195; 1157.14	10.598; 1121.00	11.355; 1400.70	11.5821; 1240.65	11.7335; 1417.50	12.112;...
+     1997.99	12.869; 1897.43	15.14; 2388.99	15.5185; 2997.99	15.897; 2268.00	17.0325; 3388.99	17.7895; 1948.00	18.925; 2292.99	19.11425; 2499.00	19.3035; 3579.00	22.71; 3658.87	23.65625; 3939.99	24.224; 3197.00	24.6025; 3180.99	24.981; 4997.99	26.495;...
+     4498.99	29.33375; 5697.99	29.523; 4971.99	30.28; 6597.99	34.63275; 7597.99	35.9575; 5822.00	37.85; 7158.00	39.7425; 6679.99	41.635; 7549.99	45.42; 9694.99	47.3125; 10882.00	47.3125; 12516.00	56.775; 10468.99	58.6675; 19980.00	75.7];
 
  watertank = array2table(wt,...
-    'VariableNames',{'Cost (USD)', 'Capacity (Gallons)'}); %Lookup table for water tanks
+    'VariableNames',{'Cost (USD)', 'Capacity (Kilo Liters)'}); %Lookup table for water tanks
 
 %tank_vol_options = wt(x(6),2); %tank volume options for the design variable
 %DailyVol=tank_vol_options;
@@ -200,7 +199,7 @@ ps=150;
 maxml=365*5;%max membrane life  
 x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(10,ps,1), randi(5,ps,1)];
 
-x_opt_manual=zeros(iter,9);
+%x_opt_manual=zeros(iter,9);
 
 FFfit=[ 0.5371,3.752,6.024,-0.027385333];%mid% AC & Rinse
 %FFfit=[0.4472,0.6963,2.587,-0.027385333];%low% AC & Rinse
@@ -209,7 +208,8 @@ FFfit=[ 0.5371,3.752,6.024,-0.027385333];%mid% AC & Rinse
     options = gaoptimset('PopulationSize', ps,'Generations', 150,'EliteCount', 1, ...
         'CrossoverFraction',Fract,...
         'TolFun', 1E-2,'TolCon', 1E-10,'Display','iter','PlotFcns',@gaplotbestf,...
-        'InitialPopulation', x0,'PlotFcns',@gaplotbestindiv, 'PlotFcns', @gaplotscores);
+        'InitialPopulation', x0,'PlotFcns',@gaplotbestindiv);
+% 'PlotFcns', @gaplotscores
 
 %Oct25 - changed options gaoptimset 'TolFun',1, to 'TolFun',1E-2
 
@@ -242,7 +242,7 @@ Penalty_Glob=5;
     %counter=counter+1;
     
     %x_opt_manual=k;
-    Cost_manual=Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
+    Cost_manual=Cost_Function(x_opt_cf,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
     
 %end
 %{
@@ -251,10 +251,10 @@ locate_min=find(Cost_manual==Min_Cost_manual(i));
 memb_repl(i)=x_opt_cf(i,3)+locate_min-1;
 x_opt_manual(i,3)=memb_repl(i);
 %}
-[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x,FFfit,system_life,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
+[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x_opt_cf,FFfit,system_life,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
 
 %save the workspace
-save('GA_Victoria_test.mat');
+save('GA_Regina_test.mat');
 
 
 
