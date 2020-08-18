@@ -44,7 +44,7 @@ waterday = comnum*200; %Number of members in the community * 200L (pop up city) 
 
 %% Constant Values for Simulation
 
-system_life = 25; 
+system_life = 1; 
 simulation_day=365*system_life;%Number of days for the simulation time
 DailyVol=waterday;
 sim_life=10;
@@ -493,7 +493,7 @@ rinsing_flag=0;%rinsing flag to catch everytime a rinse has occured
 hour=0;
 deltat=1;
 
-%Energy_sum=zeros(simulation_day,24);
+Energy_sum=zeros(simulation_day,24);
 Energy_hourly=zeros(simulation_day,24);
 num_hrs=zeros(1,simulation_day);
 Qp=zeros(simulation_day,24);
@@ -538,19 +538,21 @@ for i=1:simulation_day
     
   
     %Power Strategy
-    
+     
+   
     for s=1:24
         
         % PVPower uses PVpower in kW/m^2, and multiplies by the panel size (m^2),
         % number of panels and panel efficieny
-        Energy_sum(i,s)=solarPower(s)*deltat+Energy_prev+W(s);
+        Energy_sum(i,s)=solarPower((i-1)*24+s)*deltat+Energy_prev+W((i-1)*24+s);
         Energy_prev=Energy_sum(i,s);
-        Energy_hourly(i,s)=solarPower(s)*deltat+W(s);
+        Energy_hourly(i,s)=solarPower((i-1)*24+s)*deltat+W((i-1)*24+s);
         
-        if s>12 && (foundsunset==0 && solarPower(s)==0)
+        if s>12 && (foundsunset==0 && solarPower((i-1)*24+s)==0)
         sunset_hr=s;
         foundsunset=1;
         end
+       
     end
     
     
@@ -614,7 +616,8 @@ for i=1:simulation_day
             Power_use(i,s)=0;          
         end
     
-    
+        disp (num_hours_run);
+
         %Tank Volume
         
         if tank_full ==1 % dont add the water Qp(i,s) to the tank
