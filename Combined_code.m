@@ -2,7 +2,7 @@
 %Neeha Rahman + Hannah Yorke Gambhir + Melina Tahami
 %Last Updated: July 9, 2020
 
-function [mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x,FFfit,system_life,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse)
+function [mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x,FFfit,system_life,W, solarPower, waterday, PumpEnergy, Kw_init, A, p, p_osm, Qf,v_rinse)
 
 DailyVol=waterday;
 
@@ -100,7 +100,7 @@ rinsing_flag=0;%rinsing flag to catch everytime a rinse has occured
 hour=0;
 deltat=1;
 
-Energy_sum=zeros(simulation_day,24);
+%Energy_sum=zeros(simulation_day,24);
 Energy_hourly=zeros(simulation_day,24);
 num_hrs=zeros(1,simulation_day);
 Qp=zeros(simulation_day,24);

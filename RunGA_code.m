@@ -9,7 +9,7 @@
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
 %  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
 %x(4)= randi(10); %for testing
-%  Design Variable 5 = Membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
+%  Design Variable 5 = Membrane filtration unit chosen [1 (1), 2 (2), 3 (3), 4 (4)]
 %x(5)= randi(4); %for testing
 %  Design Variable 6 = Tank size selected
 %x(6)= randi(75); %for testing
@@ -25,8 +25,15 @@ clear;clc;
 numberofVariables=9; %# of design variables,
 
 global Energy_sum;
-%global salinity;
-%global DOC;
+global W;
+global solarPower;
+global PumpEnergy;
+global Kw_init;
+global A;
+global p;
+global p_osm;
+global Qf;
+global v_rinse;
 
 %% Gather User info
 
@@ -62,7 +69,7 @@ PV_power = SolarIn;
     % Lookup Table for solar panels 
     SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
         4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
-       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72;10 0 0 0 0 0 0 0];
+       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72];
     % Creates the array with all the key information about each solar panel
     
     SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
@@ -182,6 +189,9 @@ tic
 
 iter=10;
 
+system_life = 25; 
+simulation_day=365*system_life;%Number of days for the simulation time
+Energy_sum=zeros(simulation_day,24);
 x_opt_cf=zeros(10,8);
 cost=zeros(1,10);
 exitcond=zeros(1,10);
@@ -194,10 +204,11 @@ memb_repl=zeros(1,iter);
 %x_opt_cf=zeros(3,9,8);
 %cost=zeros(3,9);
 %exitcond=zeros(3,9);
-Fract=0.3;
-ps=150;
+Fract=0.1;
+ps=200;
+gen=200;
 maxml=365*5;%max membrane life  
-x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(10,ps,1), randi(5,ps,1)];
+x0=[randi(2,ps,1), randi(2,ps,1), randi(maxml,ps,1), randi(10,ps,1), randi(4,ps,1), randi(75,ps,1), randi(50,ps,1), randi(9,ps,1), randi(5,ps,1)];
 
 %x_opt_manual=zeros(iter,9);
 
@@ -205,7 +216,7 @@ FFfit=[ 0.5371,3.752,6.024,-0.027385333];%mid% AC & Rinse
 %FFfit=[0.4472,0.6963,2.587,-0.027385333];%low% AC & Rinse
 %FFfit=[0.627,6.808,9.46,-0.027385333];%high AC & Rinse
 
-    options = gaoptimset('PopulationSize', ps,'Generations', 150,'EliteCount', 1, ...
+    options = gaoptimset('PopulationSize', ps,'Generations', gen,'EliteCount', 1, ...
         'CrossoverFraction',Fract,...
         'TolFun', 1E-2,'TolCon', 1E-10,'Display','iter','PlotFcns',@gaplotbestf,...
         'InitialPopulation', x0,'PlotFcns',@gaplotbestindiv);
@@ -224,7 +235,7 @@ Penalty_Glob=5;
    LOWP_Global=0.01;
     
 %    DailyVol=i;
-[x_opt_cf,cost,exitcond] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 10;5],[],[1;2;3;4;5;6;7;8;9],options);     
+[x_opt_cf,cost,exitcond] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 5],[],[1;2;3;4;5;6;7;8;9],options);     
 %[x_opt_cf_ga(i,:),cost_ga(i),exitcond_ga(i)] = ga(@(x) FindCost_PenFun(x,DailyVol,LOWP_Global,Penalty_Glob,PVpower),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 6; 2; 3; 23; 50],[],[1;2;3;4;5;6;7;8],options);
 %     save('GA_Oct16_2m3perday_5yrMaxML_variablePop_SimLife10yr_iter.mat');
 
@@ -251,7 +262,7 @@ locate_min=find(Cost_manual==Min_Cost_manual(i));
 memb_repl(i)=x_opt_cf(i,3)+locate_min-1;
 x_opt_manual(i,3)=memb_repl(i);
 %}
-[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x_opt_cf,FFfit,system_life,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
+[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x_opt_cf,FFfit,sim_yrs,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
 
 %save the workspace
 save('GA_Regina_test.mat');

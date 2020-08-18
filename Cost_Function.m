@@ -5,17 +5,22 @@
 function PVRO_PenaltyCost=Cost_Function(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed, waterday, salinity)
 
 %% Design Variables
-%  Design Variable 1 = Antiscalant [None (3), F135 (1), F260(2)]
+%  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
 %x(1)= randi(2); %for testing
 %  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
 %x(2)= randi(2); %for testing
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
 %  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
 %x(4)= randi(10); %for testing
-%  Design Variable 5 = Membrane filtration rate [1 (1), 2 (2), 3 (3), 4 (4)]
+%  Design Variable 5 = Membrane filtration unit chosen [1 (1), 2 (2), 3 (3), 4 (4)]
 %x(5)= randi(4); %for testing
 %  Design Variable 6 = Tank size selected
 %x(6)= randi(75); %for testing
+%  Design Variable 7 = Number of solar panels -->choose battery/energy storage (Continuous)
+                      %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
+% Design Variable 8 = Model of Solar Panel
+% Design Variable 9 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
+%x(9)= randi(5); %for testing
 
 %% Simulation
 sim_life=10; %Number of years for the simulation time
@@ -86,7 +91,7 @@ end
     % Lookup Table for solar panels
     SP = [1 19.64 239 3112.36	375	39.8 9.43 144; 2 19.5	240	3097.15	390	40.21 9.7 72; 3 19.8 315	2655.2	340	34.5 9.86	60;...
         4 19.3 199	2611.81	325	33.65	9.6	120; 5 20.6 435	2677.2	355	36.4	9.76	60; 6 19.57 254	2615.79	330	36	9.18	60;...
-       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72; 10 0 0 0 0 0 0 0];
+       7 18.35 176	3112.36	368	39.2	9.39	144; 8 17.8 146.63	2998.73	345	37.38	9.23	72;9 17.3 138	3096.81	345	38.04	9.07	72];
     % Creates the array with all the key information about each solar panel
     
     SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
@@ -98,45 +103,45 @@ end
 %x(8)= randi(9); %for testing
 %x(7)= randi(50);
     if x(8)== 1
-        solarPower=(((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)');
+        solarPower=((((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)');
         solarCost= SP(1,3).* x(7);
     elseif x(8)==2
-        solarPower=(((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)' );
+        solarPower=((((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)');
         solarCost= SP(2,3).* x(7);
     elseif x(8)==3
-        solarPower=(((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)');
+        solarPower=((((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)');
         solarCost= SP(3,3).* x(7);
     elseif x(8)==4
-        solarPower=(((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)' );
+        solarPower=((((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)');
         solarCost= SP(4,3).* x(7);
     elseif x(8)==5
-        solarPower=(((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)' );
+        solarPower=((((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)');
         solarCost= SP(5,3).* x(7);
     elseif x(8)==6
-        solarPower=(((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)' );
+        solarPower=((((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)' );
         solarCost= SP(6,3).* x(7);
     elseif x(8)==7
-        solarPower=(((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)' );
+        solarPower=((((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)' );
         solarCost= SP(7,3).* x(7);
     elseif x(8)==8
-        solarPower=(((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)* x(7);
-        display(sum(solarPower), 'Total power obtained (KW)');
+        solarPower=((((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)*0.00064516)* x(7);
+        display(sum(solarPower), 'Total solar power obtained (KW)');
         solarCost= SP(8,3).* x(7);
     elseif x(8)==9
-        solarPower=(((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)* x(7); 
-        display(sum(solarPower), 'Total power obtained (KW)' );
+        solarPower=((((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)*0.00064516)* x(7); 
+        display(sum(solarPower), 'Total solar power obtained (KW)' );
         solarCost= SP(9,3).* x(7);
-    elseif x(8)==10 %No Solar Selected
-        solarPower=(((SP(10,2)/100).*SP(10,4).*PV_power.*SP(10,5))/1000)* x(7); 
-        display(sum(solarPower), 'No Solar Panel was selected');
-        solarCost= SP(9,3).* x(7);
+    %elseif x(8)==10 %No Solar Selected
+        %solarPower=((((SP(10,2)/100).*SP(10,4).*PV_power.*SP(10,5))/1000)*0.00064516)* x(7); 
+        %display(sum(solarPower), 'No Solar Panel was selected');
+        %solarCost= SP(9,3).* x(7);
     end
     
 %% Wind code
@@ -161,7 +166,7 @@ if x(9) == 1 %WT1
     if wind_speed > wind_survival;
          W = 0*wind_speed;
         display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
-        wind_cost = 0;
+        wind_cost = 2000000000000;
     end
    
 elseif x(9) == 2 %WT2
@@ -172,7 +177,7 @@ elseif x(9) == 2 %WT2
     if wind_speed > wind_survival;
        W = 0*wind_speed;
        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
-       wind_cost = 0;
+       wind_cost = 2000000000000;
     end
    
 
@@ -184,7 +189,7 @@ elseif x(9) == 3 %WT2
     if wind_speed > wind_survival;
          W = 0*wind_speed;
         display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
-        wind_cost = 0;
+        wind_cost = 2000000000000;
     end
 
 elseif x(9) == 4 %WT2
@@ -195,10 +200,10 @@ elseif x(9) == 4 %WT2
     if wind_speed > wind_survival;
          W = 0*wind_speed;
         display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')   
-        wind_cost = 0;
+        wind_cost = 2000000000000;
     end
 
-elseif x(9) == 5 %No turbine selected 
+else %x(9) == 5 %No turbine selected 
     W = 0*wind_speed;
     display(sum(W)/1000, 'No Wind Turbine was selected')   
     wind_cost = Windturbines(x(9),8);
@@ -226,7 +231,7 @@ end
 % penalty function for tanks
 tank_vol_options = wt(x(6),2);
 CCTank = wt(x(6),1);
-
+display(tank_vol_options, 'Volume of Tank Selected in Kilo Liters'); 
 
 
 %% Water Filtration + Motor & Pump selection
@@ -252,6 +257,8 @@ if salinity > 60 %If it is above 60mg/l then the system will choose an RO membra
         RR_sys=0.75; %recovery ratio is 75%
         membReplRate=365/x(3);
 
+            Membrane_Selected = membranetable(x(5),1);
+            display(Membrane_Selected);
             CCmemb = membranetable(x(5),4).*x(4);
             PresVes = membranetable(x(5),11).*x(4); 
             membrane_selected = membranetable(x(5),6);
@@ -269,6 +276,7 @@ if salinity > 60 %If it is above 60mg/l then the system will choose an RO membra
             Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
             Qf=(1/RR_sys)*(Qp);
             
+           
      %Filter = membraneRO(cat(2,membraneRO{:,6}) > 'wateramountday',:) %The chosen filter is dependant on the filtration rate and amount of water needed for the community and extracts that row from the lookup table
         %RO_selected = RO(:,6);
         %RO_selected
@@ -315,6 +323,8 @@ elseif salinity < 60 %If it is below 60mg/l then the sysetm will choose either a
         RR_sys=0.75; %recovery ratio is 75%
         membReplRate=365/x(3);
 
+            Membrane_Selected = membranetable(x(5),1);
+            display(Membrane_Selected);
             CCmemb = membranetable(x(5),4).*x(4);
             PresVes = membranetable(x(5),11).*x(4); 
             membrane_selected = membranetable(x(5),6);
@@ -331,6 +341,8 @@ elseif salinity < 60 %If it is below 60mg/l then the sysetm will choose either a
             p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization 
             Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
             Qf=(1/RR_sys)*(Qp);
+            
+            display(CCmemb);
             
 % UV purification unit
         
@@ -366,6 +378,8 @@ elseif DOC > 50 %If it is above 50 then the system will chose a UF membrane from
         RR_sys=0.75; %recovery ratio is 75%
         membReplRate=365/x(3);
 
+            Membrane_Selected = membranetable(x(5),1);
+            display(Membrane_Selected);
             CCmemb = membranetable(x(5),4).*x(4);
             PresVes = membranetable(x(5),11).*x(4); 
             membrane_selected = membranetable(x(5),6);
@@ -383,6 +397,7 @@ elseif DOC > 50 %If it is above 50 then the system will chose a UF membrane from
             Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
             Qf=(1/RR_sys)*(Qp);
             
+            display(CCmemb);
 % UV purification unit
         
         CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
