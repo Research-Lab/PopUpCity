@@ -1,29 +1,33 @@
+
+function PVRO_PenaltyCost=Simulation_Test(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed, waterday, salinity)
 %% Design Variables
 
 %  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
-x(1)= randi(2,1); %for testing
+%x(1)= randi(2,1); %for testing
 %  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
-x(2)= randi(2,1); %for testing
+%x(2)= randi(2,1); %for testing
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
 %  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
-x(4)= randi(10,1); %for testing
+%x(4)= randi(10,1); %for testing
 %  Design Variable 5 = Membrane filtration unit chosen [1 (1), 2 (2), 3 (3), 4 (4)]
-x(5)= randi(4,1); %for testing
+%x(5)= randi(4,1); %for testing
 %  Design Variable 6 = Tank size selected
-x(6)= randi(75,1); %for testing
+%x(6)= randi(75,1); %for testing
 %  Design Variable 7 = Number of solar panels -->choose battery/energy storage (Continuous)
                       %  such that the beginning increase in power is met, e.g. storage = 0.1*PV_Watt_peak
-x(7)= randi(50,1); %for testing
+%x(7)= randi(50,1); %for testing
 % Design Variable 8 = Model of Solar Panel
-x(8)= randi(9,1); %for testing
+%x(8)= randi(9,1); %for testing
 % Design Variable 9 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4)]
 %x(9)= randi(5); %for testing
-x(9)= randi(4,1); %for testing
+%x(9)= randi(4,1); %for testing
 
+%{
 %% Optimization
 
 %clear;clc;
 numberofVariables=9; %# of design variables,
+
 
 %% Gather User info
 
@@ -41,20 +45,23 @@ promptcom = 'How many members are in the community? \n '; %Finds out how many me
 
 waterday = comnum*200; %Number of members in the community * 200L (pop up city) = amount of water needed to be collected per day (in Liters)
 %extrapower = comnum*1.5; %Number of members in the community * 1.5kW (pop up city)
+%}
 
 %% Constant Values for Simulation
 
 system_life = 1; 
 simulation_day=365*system_life;%Number of days for the simulation time
 DailyVol=waterday;
-sim_life=10;
+sim_life=1;
 Penalty_Glob=5;
 LOWP_Global=0.01;
 
+
 %% Solar Panel Code
 
-%run('Solar_panels');
 
+%run('Solar_panels');
+%{
     % User imput
 fprintf ('Please select a solar data excel file \n');
 [file,path,indx] = uigetfile('*.xlsx'); %Reads in a user selected excel sheet
@@ -67,6 +74,7 @@ else %If a user selects an excel sheet it will run through the solar simulation 
     SolarIn = data(:,c);
 end
 PV_power = SolarIn;
+%}
 
     % Lookup Table for solar panels
     SP = [1 19.64 239 2.00	375	39.8 9.43 144; 2 19.5	240	1.998	390	40.21 9.7 72; 3 19.8 315	1.713	340	34.5 9.86	60;...
@@ -123,7 +131,7 @@ PV_power = SolarIn;
 %% Wind code
 
 %run('V6');
-
+%{
  % User Inputs the file
 fprintf(' Please input the wind data excel file \n');
 [file, path, indx] = uigetfile('*.xlsx');
@@ -163,6 +171,7 @@ Probability_Density_Function = wblpdf(wind_speed_weibull, wb.a, wb.b);
 Power_per_wind_speed = 0.5.*rho_air.*Probability_Density_Function.*wind_speed_weibull.^3; 
 Theoretical_total_power_output = sum(Power_per_wind_speed(:)); %watts/m^2
 display(Theoretical_total_power_output/1000, 'Theoretical power output in 73 days (kwatts/m^2)');
+%}
 
     % Lookup table for wind turbines
 Windturbines = [1 350 12.5 3.5 0 50 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
@@ -799,4 +808,5 @@ xlabel('hour');
 ylabel('Rinsing [m^{3}]');
 %}
 %%
+end 
 

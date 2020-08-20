@@ -25,16 +25,17 @@ clear;clc;
 numberofVariables=9; %# of design variables,
 
 global Energy_sum;
-global W;
-global solarPower;
-global PumpEnergy;
-global Kw_init;
-global A;
-global p;
-global p_osm;
-global Qf;
-global v_rinse;
+%global W;
+%global solarPower;
+%global PumpEnergy;
+%global Kw_init;
+%global A;
+%global p;
+%global p_osm;
+%global Qf;
+%global v_rinse;
 
+%{
 %% Gather User info
 
 prompt ='Please state geographical location \n';
@@ -97,6 +98,8 @@ else
         end 
 
 end
+%}
+load('regina_workspace')
     % weibull plot
 wind_speed_weibull = wind_speed(1:1750, 1); 
 wb = fitdist(wind_speed_weibull, 'weibull');
@@ -189,7 +192,7 @@ tic
 
 iter=10;
 
-system_life = 25; 
+system_life = 1; 
 simulation_day=365*system_life;%Number of days for the simulation time
 Energy_sum=zeros(simulation_day,24);
 x_opt_cf=zeros(10,8);
@@ -231,11 +234,11 @@ Penalty_Glob=5;
 %for i=1:iter
     
    %DailyVol=5;%m3/day
-   sim_yrs=5;
+   sim_yrs=25;
    LOWP_Global=0.01;
     
 %    DailyVol=i;
-[x_opt_cf,cost,exitcond] = ga(@(x) Cost_Function(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 5],[],[1;2;3;4;5;6;7;8;9],options);     
+[x_opt_cf,cost,exitcond] = ga(@(x) Simulation_Test(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 5],[],[1;2;3;4;5;6;7;8;9],options);     
 %[x_opt_cf_ga(i,:),cost_ga(i),exitcond_ga(i)] = ga(@(x) FindCost_PenFun(x,DailyVol,LOWP_Global,Penalty_Glob,PVpower),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 6; 2; 3; 23; 50],[],[1;2;3;4;5;6;7;8],options);
 %     save('GA_Oct16_2m3perday_5yrMaxML_variablePop_SimLife10yr_iter.mat');
 
@@ -253,7 +256,7 @@ Penalty_Glob=5;
     %counter=counter+1;
     
     %x_opt_manual=k;
-    Cost_manual=Cost_Function(x_opt_cf,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
+    %Cost_manual=Cost_Function(x_opt_cf,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity);
     
 %end
 %{
@@ -262,7 +265,7 @@ locate_min=find(Cost_manual==Min_Cost_manual(i));
 memb_repl(i)=x_opt_cf(i,3)+locate_min-1;
 x_opt_manual(i,3)=memb_repl(i);
 %}
-[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x_opt_cf,FFfit,sim_yrs,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
+%[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x_opt_cf,FFfit,sim_yrs,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
 
 %save the workspace
 save('GA_Regina_test.mat');
