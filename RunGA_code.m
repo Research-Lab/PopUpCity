@@ -4,7 +4,7 @@
 
 %  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
 %x(1)= randi(2); %for testing
-%  Design Variable 2 = Rinsing [ NoRinse (0), Rinse (1) ]
+%  Design Variable 2 = Rinsing [NoRinse (1), Rinse (2)]
 %x(2)= randi(2); %for testing
 %  Design Variable 3 = continuous variable, length of time before replacing membrane in days
 %  Design Variable 4 = Number of Filtration Membranes [1 (1), 2 (2), 3 (3), 4 (4), 5 (5), 6 (6), 7 (7), 8 (8), 9 (9), 10 (10)]
@@ -76,7 +76,7 @@ PV_power = SolarIn;
     SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
         'Operating Voltage (V)', 'Operating Current (A)', 'Number of Cells'}); %Creates a Lookup Table 
     
-    disp (SolarPanels);  %Displays the Lookup Table
+    %disp (SolarPanels);  %Displays the Lookup Table
    
 %% Read in Wind Data 
     % User Inputs the file
@@ -98,8 +98,7 @@ else
         end 
 
 end
-%}
-load('regina_workspace')
+
     % weibull plot
 wind_speed_weibull = wind_speed(1:1750, 1); 
 wb = fitdist(wind_speed_weibull, 'weibull');
@@ -126,7 +125,10 @@ Windturbines = [1 350 12.5 3.5 0 50 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000
 WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
 %We can add more wind turbines in our array
+%}
 
+
+load('victoria_workspace')
 %% Water tank size and cost lookup table
 %Water tanks purchased from: https://www.tank-depot.com/product.aspx?id=3242
 
@@ -235,7 +237,7 @@ Penalty_Glob=5;
     
    %DailyVol=5;%m3/day
    sim_yrs=25;
-   LOWP_Global=0.01;
+   LOWP_Global=0.001;
     
 %    DailyVol=i;
 [x_opt_cf,cost,exitcond] = ga(@(x) Simulation_Test(x,sim_yrs,LOWP_Global,Penalty_Glob,PV_power,wind_speed, waterday, salinity),numberofVariables,[],[],[],[],[1; 1; 1; 1; 1; 1; 1; 1; 1],[2; 2; maxml; 10; 4; 75; 50; 9; 5],[],[1;2;3;4;5;6;7;8;9],options);     
@@ -268,7 +270,7 @@ x_opt_manual(i,3)=memb_repl(i);
 %[mass_as_used,Water_NotMet,Max_BattStor]=Combined_code(x_opt_cf,FFfit,sim_yrs,W, solarPower, waterday, PumpEnergy,Kw_init,A,p,p_osm, Qf,v_rinse);
 
 %save the workspace
-save('GA_Regina_test.mat');
+save('GA_Victoria_test_0.1CF_LOWP0.001.mat');
 
 
 
