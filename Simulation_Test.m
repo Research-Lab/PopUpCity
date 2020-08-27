@@ -806,7 +806,7 @@ end
 
 PV.BOS.CC=(0.12*(280)+0.27*280)*x(7);
 %Battery Capital Costs
-PV.Batt.CC=Max_BattStor*80; %Advanced Lead Acid Battery Storage is about $80/kWh in 2015 http://www.sciencedirect.com.myaccess.library.utoronto.ca/science/article/pii/B9780444637000000210 
+PV.Batt.CC=Min_BattStor*80; %Advanced Lead Acid Battery Storage is about $80/kWh in 2015 http://www.sciencedirect.com.myaccess.library.utoronto.ca/science/article/pii/B9780444637000000210 
 %Battery Replacement Costs
 %Assumed every 5 yrs based on 40,000 cycles to failure
 %conservative estimate some recent studies have shown they can last much
@@ -824,11 +824,11 @@ system_life=25; %25 years
 Equiv_Ann_cost_factor=(disc_rate*(1+disc_rate)^system_life)/(((1+disc_rate)^system_life)-1);
 AnnCostsRepl=CCmemb*membReplRate+FilterCost*FilterReplRate+CCpump*pumpReplRate+CCmotor*motorReplRate+CCpostchems*postchemsReplRate;
 
-AnnCost=(solarCost+PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost+wind_cost)*Equiv_Ann_cost_factor;
+AnnCost=(PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost)*Equiv_Ann_cost_factor;
 
 AnnCostCC=(CCuv+CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank+CCpipes)*Equiv_Ann_cost_factor;
 
-PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as;
+PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as+wind_cost+solarCost;
 
 PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMet-LOWP_Global));
 
@@ -857,12 +857,12 @@ ylabel('PV Power [kW]');
 figure, plot(rinsing_singlevector)
 xlabel('hour');
 ylabel('Rinsing [m^{3}]');
-figure, plot(W);
-xlable ('hour');
-ylable ('Wind Power [kW]');
+%figure, plot(W);
+%xlable ('hour');
+%ylable ('Wind Power [kW]');
 %}
 %save the workspace
-save('Test1.mat');
+save('Test4.mat');
 %%
 end 
 
