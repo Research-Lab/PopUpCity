@@ -1,5 +1,4 @@
-
-function PVRO_PenaltyCost=Simulation_Test(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed, waterday, salinity)
+function PVRO_PenaltyCost=Simulation_Test(x,sim_life,LOWP_Global,Penalty_Glob, PV_power, wind_speed, waterday, MWCO)
 %% Design Variables
 
 %  Design Variable 1 = Antiscalant [None (0), F135 (1), F260(2)]
@@ -20,25 +19,27 @@ function PVRO_PenaltyCost=Simulation_Test(x,sim_life,LOWP_Global,Penalty_Glob, P
 %x(8)= randi(9,1); %for testing
 % Design Variable 9 = Model of Wind Turbine [1 (1), 2 (2), 3 (3), 4 (4), 5(0)]
 %x(9)= randi(5,1); %for testing
+%Design Variable 10 = Number of Wind Turbines [1-10]
+%x(10) = randi(10,1); %for testing
 
+%% Testing for Preset Variables
+%{
 x(1)=1;
 x(2)=1;
-x(3)=1825;
-x(4)=1;
-x(5)=1;
-x(6)=1;
-x(7)=1;
-x(8)=1;
-x(9)=4;
+x(3)=1763;
+x(4)=44;
+x(5)=3;
+x(6)=67;
+x(7)=51;
+x(8)=8;
+x(9)=2;
+x(10)=5;
 %}
 
-%% Optimization
-
 %clear;clc;
-numberofVariables=9; %# of design variables,
-
-%{
+numberofVariables=10; %# of design variables,
 %% Gather User info
+%{
 
 prompt ='Please state geographical location \n';
     loc = input(prompt, 's');
@@ -55,21 +56,19 @@ promptcom = 'How many members are in the community? \n '; %Finds out how many me
 waterday = comnum*200; %Number of members in the community * 200L (pop up city) = amount of water needed to be collected per day (in Liters)
 %extrapower = comnum*1.5; %Number of members in the community * 1.5kW (pop up city)
 %}
-load('victoria_workspace')
+
+%load('Oittila_worksapce')
 %% Constant Values for Simulation
 
 system_life = 1;
 simulation_day=365*system_life;%Number of days for the simulation time
-DailyVol=waterday;
-sim_life=1;
+%DailyVol=waterday;
+sim_life=25;
 Penalty_Glob=5;
-LOWP_Global=0.001;
-
+LOWP_Global = 0.07;
 
 %% Solar Panel Code
 
-
-%run('Solar_panels');
 %{
     % User imput
 fprintf ('Please select a solar data excel file \n');
@@ -88,7 +87,7 @@ PV_power = SolarIn;
 % Lookup Table for solar panels
 SP = [1 19.64 239 2.00	375	39.8 9.43 144; 2 19.5	240	1.998	390	40.21 9.7 72; 3 19.8 315	1.713	340	34.5 9.86	60;...
     4 19.3 199	1.685	325	33.65	9.6	120; 5 20.6 435	1.727	355	36.4	9.76	60; 6 19.57 254	1.688	330	36	9.18	60;...
-    7 18.35 176	2.00	368	39.2	9.39	144; 8 17.8 146.63	1.935	345	37.38	9.23	72;9 17.3 138	1.998	345	38.04	9.07	72];
+    7 18.35 176	2.00	368	39.2	9.39	144; 8 17.8 146.63	1.935	345	37.38	9.23	72; 9 0 0 0 0 0 0 0];
 % Creates the array with all the key information about each solar panel
 
 SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost (USD)', 'Size (in^2)', 'Nominal Max Power (W)',...
@@ -96,50 +95,44 @@ SolarPanels = array2table (SP, 'VariableNames',{'Model','Efficiency (%)', 'Cost 
 
 % IF statements for the GA - Solar Panels
 if x(8)== 1
-    solarPower=((((SP(1,2)/100).*SP(1,4).*PV_power.*SP(1,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(1,2)/100).*0.98*PV_power.*SP(1,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)');
     solarCost= SP(1,3).* x(7);
 elseif x(8)==2
-    solarPower=((((SP(2,2)/100).*SP(2,4).*PV_power.*SP(2,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(2,2)/100).*0.98*PV_power.*SP(2,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)' );
     solarCost= SP(2,3).* x(7);
 elseif x(8)==3
-    solarPower=((((SP(3,2)/100).*SP(3,4).*PV_power.*SP(3,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(3,2)/100).*0.98*PV_power.*SP(3,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)');
     solarCost= SP(3,3).* x(7);
 elseif x(8)==4
-    solarPower=((((SP(4,2)/100).*SP(4,4).*PV_power.*SP(4,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(4,2)/100).*0.98*PV_power.*SP(4,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)' );
     solarCost= SP(4,3).* x(7);
 elseif x(8)==5
-    solarPower=((((SP(5,2)/100).*SP(5,4).*PV_power.*SP(5,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(5,2)/100).*0.98*PV_power.*SP(5,4))/1000))* x(7);
     display(sum(solarPower), 'Total soalr power obtained (KW)' );
     solarCost= SP(5,3).* x(7);
 elseif x(8)==6
-    solarPower=((((SP(6,2)/100).*SP(6,4).*PV_power.*SP(6,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(6,2)/100).*0.98*PV_power.*SP(6,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)' );
     solarCost= SP(6,3).* x(7);
 elseif x(8)==7
-    solarPower=((((SP(7,2)/100).*SP(7,4).*PV_power.*SP(7,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(7,2)/100).*0.98*PV_power.*SP(7,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)' );
     solarCost= SP(7,3).* x(7);
 elseif x(8)==8
-    solarPower=((((SP(8,2)/100).*SP(8,4).*PV_power.*SP(8,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(8,2)/100).*0.98*PV_power.*SP(8,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)');
     solarCost= SP(8,3).* x(7);
 elseif x(8)==9
-    solarPower=((((SP(9,2)/100).*SP(9,4).*PV_power.*SP(9,5))/1000)*0.00064516)* x(7);
+    solarPower=((((SP(9,2)/100).*0.98*PV_power.*SP(9,4))/1000))* x(7);
     display(sum(solarPower), 'Total solar power obtained (KW)' );
     solarCost= SP(9,3).* x(7);
-    %elseif x(8)==10 %No Solar Selected
-    %solarPower=((((SP(10,2)/100).*SP(10,4).*PV_power.*SP(10,5))/1000)*0.00064516)* x(7);
-    %display(sum(solarPower), 'No Solar Panel was selected');
-    %solarCost= SP(9,3).* x(7);
 end
 
 %% Wind code
-
-%run('V6');
 %{
  % User Inputs the file
 fprintf(' Please input the wind data excel file \n');
@@ -160,297 +153,88 @@ else
         end
 
 end
-    % weibull plot
-wind_speed_weibull = wind_speed(1:1750, 1);
-wb = fitdist(wind_speed_weibull, 'weibull');
-disp(wb)
-%If wb.b > 1.8 && wb.b < 2.2
-%    fprintf('The Wind data is stable, the code may proceed')
-%else
-%    fprintf('Exceeded the limit to fluctuation in data, please enter a new set of data')
-%end
-%figure
-%probplot('Weibull',wind_speed_weibull)
-
-    % calculating the power at each wind speed per unit area
-rho_air = 1.225; %kg/m^3
-Probability_Density_Function = wblpdf(wind_speed_weibull, wb.a, wb.b);
-%multiplying the power output by density function representing the period
-%of time in the year wind blowing at that speed
-Power_per_wind_speed = 0.5.*rho_air.*Probability_Density_Function.*wind_speed_weibull.^3;
-Theoretical_total_power_output = sum(Power_per_wind_speed(:)); %watts/m^2
-display(Theoretical_total_power_output/1000, 'Theoretical power output in 73 days (kwatts/m^2)');
 %}
-
 % Lookup table for wind turbines
-Windturbines = [1 350 12.5 3.5 200 50 12 3630; 0 1000 12 2.5 16 50 24 9000; 0 1000 12 2.5 17 50 48 5390; 0 300 10 3 15 50 24 2545; 0 0 0 0 0 0 0 0];
+Windturbines = [1 350 12.5 3.5 200 50 12 3630; 0 1000 12 3 17 50 48 5390; 0 300 10 3 15 50 24 2545; 0 0 0 0 0 0 0 0];
 WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
     'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
-%{
-Windturbines = [1 350 12.5 3.5 200 50 12 3630; 0 1000 12 2.5 25 50 24 9000; 0 3000 12 2.5 25 50 48 10000; 0 5000 12 2.5 25 55 48 11000; 0 0 0 0 0 0 0 0];
-WindArray = array2table(Windturbines, 'VariableNames', {'HAWT(1)/VAWT(0)', 'Rated Power (W)', 'Rated Wind Speed (m/s)', ...
-    'Cut in speed (m/s)', 'cut out speed (m/s)', 'Survival Wind Speed (m/s)', 'Output Voltage (VDC)', 'Cost ($CAD)'});
-    %}
-    % Power curves for different wind turbines
-    %x(10) = Model of WT [Superwind350(1), Mobisun 1kW(2),Mobisun 3kW(3), Mobisun 5kW(4)]
-    %need to introduce x(13) in the combined
-    
-    counter_on =0;
-    counter_off =0;
-    index=[-1,-1];
+ 
+%Power curves for each of the windturbines were found by plotting the given
+%curve in excel and using the equation of the curve
 
     if x(9) == 1 %Superwind 350
         CIS=Windturbines(x(9),4);
-        CIS_power = (0.1645)*CIS.^(3)+(0.2885)*CIS.^(2)-1.879*wind_speed+0.0572;
-        COS=Windturbines(x(9),5);
-        COS_power = (0.1645)*COS.^(3)+(0.2885)*COS.^(2)-1.879*COS+0.0572;
+        CIS_power = ((0.1037*CIS.^3 + 1.4604*CIS.^2 - 7.0995*CIS + 7.2877)/1000)*x(10);
+        RS=Windturbines(x(9),3);
+        RS_power = ((0.1037*RS.^3 + 1.4604*RS.^2 - 7.0995*RS + 7.2877)/1000)*x(10);
         %wind_speed_weibull= 0:0.5:12.5;
-        W = (0.1645)*wind_speed.^(3)+(0.2885)*wind_speed.^(2)-1.879*wind_speed+0.0572;
+        W = ((0.1037*wind_speed.^3 + 1.4604*wind_speed.^2 - 7.0995*wind_speed + 7.2877)/1000)*x(10);
         %Total_power_output = sum(W1)/1000;
         display(sum(W), 'Total Power obtained using SuperWind350(kW)/year')
-        wind_cost = Windturbines(x(9),8);
+        wind_cost = Windturbines(x(9),8)*x(10);
         wind_survival = Windturbines(x(9),6);
         
-        W(W>COS_power)=0;
+        W(W>RS_power)=0;
         W(W<CIS_power)=0;
-              
-        W=reshape(W,[4,2190]);
         
-        for n=1:2190
-            for t=1:4
-                if W(t,n)>0
-                    counter_on = counter_on +1;  
-                elseif W(t,n)<=0
-                    counter_on=0;
-                end
-            end
-            
-            if counter_on <4
-                index=[t,n];
-                counter_on=0;
-            end
-            if index ~= [-1,-1]
-                W(t,n)=0;
-                W((t-1),n)=0;
-                W((t-2),n)=0;
-                W((t-3),n)=0;
-                index=[-1,-1];              
-            end
-        end
-        W=reshape(W,[8760,1]);
-        
-        if wind_speed > wind_survival;
+        if wind_speed > wind_survival
             W = 0*wind_speed;
             display(sum(W), 'Wind speed is above Wind Turbine threshold')
             wind_cost = 2000000000000;
         end
         
-    elseif x(9) == 2 %Mobison 1000
+    elseif x(9) == 2 %P1000-AB
         CIS=Windturbines(x(9),4);
-        CIS_power = -11.141*CIS.^(3)+(229.54)*CIS.^(2)-(759.28)*CIS+861.4;
-        COS=Windturbines(x(9),5);
-        COS_power = -11.141*COS.^(3)+(229.54)*COS.^(2)-(759.28)*COS+861.4;
-        W = -11.141*wind_speed.^(3)+(229.54)*wind_speed.^(2)-(759.28)*wind_speed+861.4;
-        display(sum(W), 'Total Power obtained using Mobisun 1000kW(kW)/year')
-        wind_cost = Windturbines(x(9),8);
-        wind_survival = Windturbines(x(9),6);
-        
-        W(W>COS_power)=0;
-        W(W<CIS_power)=0;
-              W=reshape(W,[4,2190]);
-        
-        for n=1:2190
-            for t=1:4
-                if W(t,n)>0
-                    counter_on = counter_on +1;  
-                elseif W(t,n)<=0
-                    counter_on=0;
-                end
-            end
-            
-            if counter_on <4
-                index=[t,n];
-                counter_on=0;
-            end
-            if index ~= [-1,-1]
-                W(t,n)=0;
-                W((t-1),n)=0;
-                W((t-2),n)=0;
-                W((t-3),n)=0;
-                index=[-1,-1];              
-            end
-        end
-        W=reshape(W,[8760,1]);
-        
-        if wind_speed > wind_survival;
-            W = 0*wind_speed;
-            display(sum(W), 'Wind speed is above Wind Turbine threshold')
-            wind_cost = 2000000000000;
-        end
-        
-    elseif x(9) == 3 %P1000-AB
-        CIS=Windturbines(x(9),4);
-        CIS_power = -9.2416*CIS.^3 + 196.46*CIS.^2 - 589.58*CIS + 615.94;
-        COS=Windturbines(x(9),5);
-        COS_power = -9.2416*COS.^3 + 196.46*COS.^2 - 589.58*COS + 615.94;
-        W= -9.2416*wind_speed.^3 + 196.46*wind_speed.^2 - 589.58*wind_speed + 615.94;
+        CIS_power = ((0.0114*CIS.^6 - 0.4967*CIS.^5 + 8.7187*CIS.^4 - 77.911*CIS.^3 + 379.03*CIS.^2 - 917.3*CIS + 884.38)/1000)*x(10);
+        RS=Windturbines(x(9),3);
+        RS_power = ((0.0114*RS.^6 - 0.4967*RS.^5 + 8.7187*RS.^4 - 77.911*RS.^3 + 379.03*RS.^2 - 917.3*RS + 884.38)/1000)*x(10);
+        W= ((0.0114*wind_speed.^6 - 0.4967*wind_speed.^5 + 8.7187*wind_speed.^4 - 77.911*wind_speed.^3 + 379.03*wind_speed.^2 - 917.3*wind_speed + 884.38)/1000)*x(10);
         display(sum(W), 'Total Power obtained using P1000-AB(kW)/year')
-        wind_cost = Windturbines(x(9),8);
+        wind_cost = Windturbines(x(9),8)*x(10);
         wind_survival = Windturbines(x(9),6);
         
-        W(W>COS_power)=0;
+        W(W>RS_power)=0;
         W(W<CIS_power)=0;
-         
-              W=reshape(W,[4,2190]);
         
-        for n=1:2190
-            for t=1:4
-                if W(t,n)>0
-                    counter_on = counter_on +1;  
-                elseif W(t,n)<=0
-                    counter_on=0;
-                end
-            end
-            
-            if counter_on <4
-                index=[t,n];
-                counter_on=0;
-            end
-            if index ~= [-1,-1]
-                W(t,n)=0;
-                W((t-1),n)=0;
-                W((t-2),n)=0;
-                W((t-3),n)=0;
-                index=[-1,-1];              
-            end
-        end
-        W=reshape(W,[8760,1]);
-        
-        if wind_speed > wind_survival;
+        if wind_speed > wind_survival
             W = 0*wind_speed;
             display(sum(W), 'Wind speed is above Wind Turbine threshold')
             wind_cost = 2000000000000;
         end
         
-    elseif x(9) == 4 %P300-AB
+    elseif x(9) == 3 %P300-AB
         
         CIS=Windturbines(x(9),4);
-        CIS_power = -4.229*CIS.^3 + 77.66*CIS.^2 - 183.69*CIS + 152.25;
-        COS=Windturbines(x(9),5);
-        COS_power = -4.229*COS.^3 + 77.66*COS.^2 - 183.69*COS + 152.25;
-        W = -4.229*wind_speed.^3 + 77.66*wind_speed.^2 - 183.69*wind_speed + 152.25;
+        CIS_power = ((0.00005*CIS.^6 - 0.0062*CIS.^5 + 0.2909*CIS.^4 - 6.5269*CIS.^3 + 70.953*CIS.^2 - 311.42*CIS + 479.26)/1000)*x(10);
+        RS=Windturbines(x(9),3);
+        RS_power = ((0.00005*RS.^6 - 0.0062*RS.^5 + 0.2909*RS.^4 - 6.5269*RS.^3 + 70.953*RS.^2 - 311.42*RS + 479.26)/1000)*x(10);
         
-        W(W>COS_power)=0;
+        W = ((0.00005*wind_speed.^6 - 0.0062*wind_speed.^5 + 0.2909*wind_speed.^4 - 6.5269*wind_speed.^3 + 70.953*wind_speed.^2 - 311.42*wind_speed + 479.26)/1000)*x(10);
+        
+        W(W>RS_power)=0;
         W(W<CIS_power)=0;
        
-        W=reshape(W,[4,2190]);
-        
-        for n=1:2190
-            for t=1:4
-                if W(t,n)>0
-                    counter_on = counter_on +1;  
-                elseif W(t,n)<=0
-                    counter_on=0;
-                end
-            end
-            
-            if counter_on <4
-                index=[t,n];
-                counter_on=0;
-            end
-            if index ~= [-1,-1]
-                W(t,n)=0;
-                W((t-1),n)=0;
-                W((t-2),n)=0;
-                W((t-3),n)=0;
-                index=[-1,-1];              
-            end
-        end
-        W=reshape(W,[8760,1]);
-
         display(sum(W), 'Total Power obtained using P300-AB(kW)/year')
-        wind_cost = Windturbines(x(9),8);
+        wind_cost = Windturbines(x(9),8)*x(10);
         wind_survival = Windturbines(x(9),6);
         
-        
-        if wind_speed > wind_survival;
+        if wind_speed > wind_survival
             W = 0*wind_speed;
             display(sum(W), 'Wind speed is above Wind Turbine threshold')
             wind_cost = 2000000000000;
         end
         
     else %x(9) == 5 %No turbine selected
-        W = 0*wind_speed;
+        W = 0*wind_speed*x(10);
         display(sum(W)/1000, 'No Wind Turbine was selected')
-        wind_cost = Windturbines(x(9),8);
+        wind_cost = Windturbines(x(9),8)*x(10);
         CIS=Windturbines(x(9),4);
-        CIS_power = 0*CIS;
-        COS=Windturbines(x(9),5);
-        COS_power = 0*COS;
+        CIS_power = 0*CIS*x(10);
+        RS=Windturbines(x(9),5);
+        RS_power = 0*RS*x(10);
         
     end
-    
-    
-    %{
-elseif x(9) == 2 %WT2
-    W = (0.011)*wind_speed.^(6)-(0.6033)*wind_speed.^(5)+(12.75)*wind_speed.^(4)-(131.99)*wind_speed.^(3)+(702.6)*wind_speed.^(2)-1740.3*wind_speed+1572.6;
-    W = max(W,0);
-    
-    display(sum(W)/1000, 'Total Power obtained using Mobisun 1000kW(kW)/year')
-    wind_cost = Windturbines(x(9),8);
-    wind_survival = Windturbines(x(9),6);
-    CIS=Windturbines(x(9),4);
-    CIS_power = (0.011)*CIS.^(6)-(0.6033)*CIS.^(5)+(12.75)*CIS.^(4)-(131.99)*CIS.^(3)+(702.6)*CIS.^(2)-1740.3*CIS+1572.6;
-    COS=Windturbines(x(9),5);
-    COS_power = (0.011)*COS.^(6)-(0.6033)*COS.^(5)+(12.75)*COS.^(4)-(131.99)*COS.^(3)+(702.6)*COS.^(2)-1740.3*COS+1572.6;
-    
-    if wind_speed > wind_survival;
-        W = 0*wind_speed;
-        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')
-        wind_cost = 2000000000000;
-    end
-    
-elseif x(9) == 3 %WT2
-    W = -(0.069)*wind_speed.^(5)+(2.3178)*wind_speed.^(4)-(27.455)*wind_speed.^(3)+(153.8)*wind_speed.^(2)-231.99*wind_speed+37.767;
-    W = max(W,0);
-    
-    display(sum(W)/1000, 'Total Power obtained using Mobisun 3000kW(kW)/year')
-    wind_cost = Windturbines(x(9),8);
-    wind_survival = Windturbines(x(9),6);
-    CIS=Windturbines(x(9),4);
-    CIS_power = -(0.069)*CIS.^(5)+(2.3178)*CIS.^(4)-(27.455)*CIS.^(3)+(153.8)*CIS.^(2)-231.99*CIS+37.767;
-    COS=Windturbines(x(9),5);
-    COS_power = -(0.069)*COS.^(5)+(2.3178)*COS.^(4)-(27.455)*COS.^(3)+(153.8)*COS.^(2)-231.99*COS+37.767;
-    
-    if wind_speed > wind_survival;
-        W = 0*wind_speed;
-        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')
-        wind_cost = 2000000000000;
-    end
-    
-elseif x(9) == 4 %WT2
-    W = -(0.1141)*wind_speed.^(5)+(3.8867)*wind_speed.^(4)-(46.667)*wind_speed.^(3)+(263.39)*wind_speed.^(2)-402.08*wind_speed+67.197;
-    W = max(W,0);
-    
-    display(sum(W)/1000, 'Total Power obtained using Mobisun 5000kW(kW)/year')
-    wind_cost = Windturbines(x(9),8);
-    wind_survival = Windturbines(x(9),6);
-    CIS=Windturbines(x(9),4);
-    CIS_power = -(0.1141)*CIS.^(5)+(3.8867)*CIS.^(4)-(46.667)*CIS.^(3)+(263.39)*CIS.^(2)-402.08*CIS+67.197;
-    COS=Windturbines(x(9),5);
-    COS_power = -(0.1141)*COS.^(5)+(3.8867)*COS.^(4)-(46.667)*COS.^(3)+(263.39)*COS.^(2)-402.08*COS+67.197;
-    
-    if wind_speed > wind_survival;
-        W = 0*wind_speed;
-        display(sum(W)/1000, 'Wind speed is above Wind Turbine threshold')
-        wind_cost = 2000000000000;
-    end
-    %}
-    %end
-    
-    %[mass_as_used,Water_NotMet,Qf_memb,Max_BattStor, wind_speed, PV_power]=Combined_code(x,fit,sim_life, W,solarPower, waterday,PumpEnergy);
-    
-    
+     
     %% Water tank size and cost
     %Water tanks purchased from: https://www.tank-depot.com/product.aspx?id=3242
     %For larger communities - make the assumption that at least 50% of the water required for the whole community is on hand
@@ -465,8 +249,7 @@ elseif x(9) == 4 %WT2
         'VariableNames',{'Cost (USD)', 'Capacity (Liters)'}); %Lookup table for water tanks
     
     %tank_vol_options = wt(x(6),2); %tank volume options for the design variable
-    %DailyVol=tank_vol_options;
-    % penalty function for tanks
+  
     tank_vol_options = wt(x(6),2);
     CCTank = wt(x(6),1);
     display(tank_vol_options);
@@ -477,18 +260,13 @@ elseif x(9) == 4 %WT2
     %UF membranes from: https://www.wateranywhere.com/membranes/ultrafiltration-uf-membranes/polyethersulfone-uf-membranes/
     %MF membranes from: https://www.wateranywhere.com/membranes/microfiltration-mf-membranes/pvdf-microfiltration-membranes/
     %NF membranes from:
-    %Membrane housing from: https://www.wateranywhere.com/catalogsearch/result/?q=membrane+housing
+    %Membrane housing from: https://wateranywhere.com/membrane-housings/ss-membrane-housing-pressure-vessels/
     %UV Purifier from: https://www.freshwatersystems.com/collections/uv-water-purification?refinementList%5Bnamed_tags.System%20Class%5D%5B0%5D=Commercial%20Systems
     
+    %% Membrane selection
+    % Reverse Osmosis
     
-    %% RO membrane selection
-    
-    if salinity > 60 %If it is above 60mg/l then the system will choose an RO membrane from the RO lookup table
-        
-        membranetable = [1	2.5	40	182	600	45	850	28	0.15 1.4 67; 2	4	14	173	600	45	525	20	0.05 3.2 114; 3	4	21	194	600	45	900	36	0.08 3.2 137; 4	4	40	247	600	45	2625	78	0.15 3.2 130];
-        
-        RO = array2table(membranetable,...
-            'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio', 'Feed Rate (m3/h)', 'Membrane Housing Cost (USD)'}); %Lookup table
+    if MWCO < 200 %the system will choose an RO membrane
         
         %System Conditions
         p_osm=1.9;
@@ -496,203 +274,477 @@ elseif x(9) == 4 %WT2
         RR_sys=0.75; %recovery ratio is 75%
         membReplRate=365/x(3);
         
-        Membrane_Selected = membranetable(x(5),1);
-        display(Membrane_Selected, 'Selected membrane is option:');
-        CCmemb = membranetable(x(5),4).*x(4);
-        PresVes = membranetable(x(5),11).*x(4);
-        filtration_rate = Membrane_Selected*x(4);
-        Qf_memb = membranetable(x(5),10);
-        RR_spec = membranetable(x(5),9);
-        Kw_init = 0.004533031;
-        Qf_sys = membranetable(x(5),10);
-        p_psi = membranetable(x(5),5);
-        p = p_psi .* 0.0689476;%pressure in bar
-        A_mem = membranetable(x(5),8) %active membrane area is the area of the module
-        A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
-        CF=1/(1-RR_sys);%concentration factor
-        p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
-        Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
-        Qf=(1/RR_sys)*(Qp);
-        
-        
-        %Filter = membraneRO(cat(2,membraneRO{:,6}) > 'wateramountday',:) %The chosen filter is dependant on the filtration rate and amount of water needed for the community and extracts that row from the lookup table
-        %RO_selected = RO(:,6);
-        %RO_selected
+        if x(5)==1
+            Membrane_Selected = '200394';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 294*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 2500; %GPD
+            Qf_memb = 9.46; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 400; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 7.25; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==2
+            Membrane_Selected = '200376';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 216*x(4); %(USD) Membrane Cost
+            PresVes = 149*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 1000; %GPD
+            Qf_memb = 3.79; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 2.6; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==3
+            Membrane_Selected = '200391';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 256*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 2500; %GPD
+            Qf_memb = 9.46; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 7.25; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==4
+            Membrane_Selected = '200373';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 250*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 2200; %GPD
+            Qf_memb = 8.33; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 7.25; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        else %Membrane Penalty
+            Membrane_Selected = 'None';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 2000000*x(4); %(USD) Membrane Cost
+            PresVes = 2000000; %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 0; %GPD
+            Qf_memb = 0; %(m3/h) Filter feed rate
+            RR_spec = 0; %Recovery Ratio
+            Kw_init = 0; %Initial Premeability
+            p_psi = 0; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 0; % (Sq.Ft.) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+        end
         
         % UV purification unit
         
         CCuv = 94; %https://www.freshwatersystems.com/products/polaris-uva-2c-ultraviolet-disinfection-system-2-gpm
         uv_power = (14/1000); %KW
         
-        % Motor and Pump Selection for RO membrane
-        %Pump from: https://www.hydra-cell.com/product/H25-hydracell-pump.html
-        %Motor from: https://www.globalindustrial.ca/g/motors/ac-motors-definite-purpose/pump-motors/baldor-3-phase-pump-motors
-        
-        % pm = [1 500 69 2737 230 35.4; 2	500	63	2737 230 35.4; 3	500	50	1835 230 12.5; 4	500	36	1695 230 9.6];
-        
-        %  pumpmotor_table = array2table(pm,...
-        % 'VariableNames',{'Option','Pump Cost (USD)', 'Pump Capacity (L/min)', 'Motor Cost (USD)', 'Voltage', 'FL AMPS'}); %Lookup table for pump and motor
-        
         CCmotor = 1695; %https://www.globalindustrial.ca/p/motors/ac-motors-definite-purpose/pump-motors/baldor-motor-vejmm3311t-7-5-hp-1770-rpm
-        motorReplRate=0.1;% [93] Amy's thesis
-        PumpEnergy = (7.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
         CCpump = 8532;
+        motorReplRate=0.1;% [93] Amy's thesis
+        %PumpEn = (7.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+        eff_hp=0.924*0.9;%efficiency of the pump and motor
+        PumpEn=(27.78*p*Qf_memb/eff_hp)/1000; %kW is unit of PumpEnergy
         pumpReplRate=0.1;% [93] Amy's thesis
+        PumpEnergy = PumpEn + uv_power;
         
+    %Nanofiltration 
+    elseif (200 < MWCO)&& (MWCO < 1000) %the sysetm will choose an NF membrane
+
+        %System Conditions
+        p_osm=1.9;
+        v_rinse=40/1000;% in m3  %40L per rinse
+        RR_sys=0.75; %recovery ratio is 75%
+        membReplRate=365/x(3);
         
-        %% UF, MF or NF membrane selection
-    elseif salinity < 60 %If it is below 60mg/l then the sysetm will choose either an NF, UF or MF membrane
-        
-        %Nanofiltration
-        
-        if DOC < 50 %If it is below 50 then the system will chose a UF membrane from lookup table (this value is not accurate)
-            
-            membranetable = [1	2.5	40	326	435	40	200	4.7	0.15	1.4	67; 2	2.5	40	326	435	40	200	4.7	0.15	1.4	67; 3	2.5	40	326	435	40	200	4.7	0.15	1.4	67; 4	2.5	40	326	435	40	200	4.7	0.15	1.4	67];
-            NF = array2table(membranetable,...
-                'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio'});
-            
-            %System Conditions
-            p_osm=1.9;
-            v_rinse=40/1000;% in m3  %40L per rinse
-            RR_sys=0.75; %recovery ratio is 75%
-            membReplRate=365/x(3);
-            
-            Membrane_Selected = membranetable(x(5),1);
-            display(Membrane_Selected, 'Selected membrane is option:');
-            CCmemb = membranetable(x(5),4).*x(4);
-            PresVes = membranetable(x(5),11).*x(4);
-            membrane_selected = membranetable(x(5),7);
-            filtration_rate = membrane_selected*x(4);
-            Qf_memb = membranetable(x(5),10);
-            RR_spec = membranetable(x(5),9);
-            Kw_init = 0.004533031;  %Not Correct
-            Qf_sys = membranetable(x(5),10);
-            p_psi = membranetable(x(5),5);
+        if x(5)==1
+            Membrane_Selected = 'NF90-400';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 805*x(4); %(USD) Membrane Cost
+            PresVes = 587*x(4); %(USD) Pressure Vessel Cost - Membrane Housing (https://www.foreverpureplace.com/GA41368-p/ga41368.htm)
+            filtration_rate = 10000; %GPD
+            Qf_memb = 38; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
             p = p_psi .* 0.0689476;%pressure in bar
-            A_mem = membranetable(x(5),7); %active membrane area is the area of the module
+            A_mem = 37; % (m^2) active membrane area is the area of the module
             A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
-            CF=1/(1-RR_sys);%concentration factor... Not Accurate
+            CF=1/(1-RR_sys);%concentration factor
             p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
-            Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
             Qf=(1/RR_sys)*(Qp);
             
-            display(CCmemb);
-            
-            % UV purification unit
-            
-            CCuv = 450; %https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
-            uv_power = (44/1000); %KW
-            
-            % Motor and Pump Selection for NF membrane
-            
-            CCmotor = 350; %https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
-            motorReplRate=0.1;% [93] Amy's thesis
-            PumpEnergy = (0.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
-            CCpump = 0; %Value not accurate
-            pumpReplRate=0.1;% [93] Amy's thesis
-            
-            %Ultrafiltration
-        elseif 50 < DOC < 70
-            
-            UF = [1 1.8	12	44	150	60; 2 1.8	21	256	150	60; 3 2.5	40	283	150	60; 4 4 40 367 150 62];
-            
-            membranetable = array2table(UF,...
-                'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio'});
-            
-            %System Conditions
-            p_osm=1.9;
-            v_rinse=40/1000;% in m3  %40L per rinse
-            RR_sys=0.75; %recovery ratio is 75%
-            membReplRate=365/x(3);
-            
-            Membrane_Selected = membranetable(x(5),1);
-            display(Membrane_Selected, 'Selected membrane is option:');
-            CCmemb = membranetable(x(5),4).*x(4);
-            PresVes = membranetable(x(5),11).*x(4);
-            membrane_selected = membranetable(x(5),7);
-            filtration_rate = membrane_selected*x(4);
-            Qf_memb = membranetable(x(5),10);
-            RR_spec = membranetable(x(5),9);
-            Kw_init = 0.004533031;  %Not Correct
-            Qf_sys = membranetable(x(5),10);
-            p_psi = membranetable(x(5),5);
+        elseif x(5)==2
+            Membrane_Selected = '200405';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 177*x(4); %(USD) Membrane Cost
+            PresVes = 137*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 1000; %GPD
+            Qf_memb = 3.79; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
             p = p_psi .* 0.0689476;%pressure in bar
-            A_mem = membranetable(x(5),7); %active membrane area is the area of the module
+            A_mem = 3.34; %(m^2) active membrane area is the area of the module
             A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
-            CF=1/(1-RR_sys);%concentration factor... Not Accurate
+            CF=1/(1-RR_sys);%concentration factor
             p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
-            Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
             Qf=(1/RR_sys)*(Qp);
             
-            display(CCmemb);
-            
-            % UV purification unit
-            
-            CCuv = 450; %https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
-            uv_power = (44/1000); %KW
-            
-            % Motor and Pump Selection for UF membrane
-            
-            CCmotor = 350; %https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
-            motorReplRate=0.1;% [93] Amy's thesis
-            PumpEnergy = (0.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
-            CCpump = 0; %Value not accurate
-            pumpReplRate=0.1;% [93] Amy's thesis
-            
-            %}
-            
-            %Microfiltration
-            
-        elseif DOC > 70 %If it is above 50 then the system will chose a MF membrane from lookup table (this value is not accurate)
-            
-            MF = [1 4	40	397	200	25; 2 4	40	420	200	25];
-            
-            membranetable = array2table(MF,...
-                'VariableNames',{'Option', 'Diameter (in)','Length (in)', 'Cost (USD)', 'Max Pressure (psi)', 'Max Temperature (C)', 'Filtration Rate (GPD)', 'Active Surface Area (Sq. Ft.)', 'Recovery Ratio'});
-            
-            
-            %System Conditions
-            p_osm=1.9;
-            v_rinse=40/1000;% in m3  %40L per rinse
-            RR_sys=0.75; %recovery ratio is 75%
-            membReplRate=365/x(3);
-            
-            Membrane_Selected = membranetable(x(5),1);
-            display(Membrane_Selected, 'Selected membrane is option:');
-            CCmemb = membranetable(x(5),4).*x(4);
-            PresVes = membranetable(x(5),11).*x(4);
-            membrane_selected = membranetable(x(5),7);
-            filtration_rate = membrane_selected*x(4);
-            Qf_memb = membranetable(x(5),10);
-            RR_spec = membranetable(x(5),9);
-            Kw_init = 0.004533031;  %Not Correct
-            Qf_sys = membranetable(x(5),10);
-            p_psi = membranetable(x(5),5);
+        elseif x(5)==3
+            Membrane_Selected = '200412';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 259*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 2000; %GPD
+            Qf_memb = 7.6; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
             p = p_psi .* 0.0689476;%pressure in bar
-            A_mem = membranetable(x(5),7); %active membrane area is the area of the module
+            A_mem = 7.25; %(m^2) active membrane area is the area of the module
             A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
-            CF=1/(1-RR_sys);%concentration factor... Not Accurate
+            CF=1/(1-RR_sys);%concentration factor
             p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
-            Qp=Kw_init*(A)*(p-p_osm_avg);%m3/h
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
             Qf=(1/RR_sys)*(Qp);
             
-            display(CCmemb);
+        elseif x(5)==4
+            Membrane_Selected = '200406';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 262*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 2500; %GPD
+            Qf_memb = 9.46; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 600; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 7.25; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
             
-            % UV purification unit
-            
-            CCuv = 450; %https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
-            uv_power = (44/1000); %KW
-            
-            % Motor and Pump Selection for MF membrane
-            
-            CCmotor = 350; %https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
-            motorReplRate=0.1;% [93] Amy's thesis
-            PumpEnergy = (0.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
-            CCpump = 0; %Value not accurate
-            pumpReplRate=0.1;% [93] Amy's thesis
-            
-            %}
+        else
+            Membrane_Selected = 'None';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 2000000; %(USD) Membrane Cost
+            PresVes = 2000000; %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 0; %GPD
+            Qf_memb = 0; %(m3/h) Filter feed rate
+            RR_spec = 0; %Recovery Ratio
+            Kw_init = 0; %Initial Premeability
+            p_psi = 0; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 0; % (Sq.Ft.) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
         end
+        
+        % UV purification unit
+        
+        CCuv = 450; %(USD) https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
+        uv_power = (44/1000); %KW
+        
+        % Motor and Pump Selection for NF membrane
+        
+        CCmotor = 266; %(350CAD->USD) https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
+        motorReplRate=0.1;% [93] Amy's thesis
+        %PumpEn = (0.5*0.7457)/0.917; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+        CCpump = 0; %Value not accurate
+        eff_hp=0.924*0.9;%efficiency of the pump and motor
+        PumpEn=(27.78*p*Qf_memb/eff_hp)*deltat/1000; %kW is unit of PumpEnergy
+        pumpReplRate=0.1;% [93] Amy's thesis
+        PumpEnergy = PumpEn + uv_power;
+        
+        
+    %Ultrafiltration
+        
+    elseif (1000 < MWCO) && (MWCO < 100000)
+        
+        %System Conditions
+        p_osm=1.9;
+        v_rinse=40/1000;% in m3  %40L per rinse
+        RR_sys=0.75; %recovery ratio is 75%
+        membReplRate=365/x(3);
+        
+        if x(5)==1
+            Membrane_Selected = 'M-U4021HF15';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 296*x(4); %(USD) Membrane Cost
+            PresVes = 137*x(4); %(USD) Pressure Vessel Cost - Membrane Housing (https://www.foreverpureplace.com/GA41368-p/ga41368.htm)
+            filtration_rate = 1164; %GPD
+            Qf_memb = 4.41; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 43.5; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 1.8; % (m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==2
+            Membrane_Selected = 'M-U4021HF09';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 209*x(4); %(USD) Membrane Cost
+            PresVes = 137*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 1620; %GPD
+            Qf_memb = 6.14; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 43.5; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 2.5; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==3
+            Membrane_Selected = 'M-U4040HF15';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 245*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 2580; %GPD
+            Qf_memb = 9.76; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 43.5; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 4; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==4
+            Membrane_Selected = 'M-U4040HF09';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 249*x(4); %(USD) Membrane Cost
+            PresVes = 206*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 3900; %GPD
+            Qf_memb = 14.7; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 43.5; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 6; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        else
+            Membrane_Selected = 'None';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 2000000; %(USD) Membrane Cost
+            PresVes = 2000000; %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 0; %GPD
+            Qf_memb = 0; %(m3/h) Filter feed rate
+            RR_spec = 0; %Recovery Ratio
+            Kw_init = 0; %Initial Premeability
+            p_psi = 0; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 0; % (Sq.Ft.) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+        end
+        
+        % UV purification unit
+        
+        CCuv = 450; %https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
+        uv_power = (44/1000); %KW
+        
+        % Motor and Pump Selection for UF membrane
+        
+        CCmotor = 266; %(350CAD->USD) https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
+        motorReplRate=0.1;% [93] Amy's thesis
+        PumpEn = (27.78*p*Qf_memb/eff_hp)/1000; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+        CCpump = 0; %Value not accurate
+        pumpReplRate=0.1;% [93] Amy's thesis
+        PumpEnergy = PumpEn + uv_power;
+        
+        %}
+                
+    %Microfiltration
+        
+    elseif MWCO > 100000 %If it is above 100000 Da then the system will chose a MF membrane 
+           
+       %System Conditions
+        p_osm=1.9;
+        v_rinse=40/1000;% in m3  %40L per rinse
+        RR_sys=0.75; %recovery ratio is 75%
+        membReplRate=365/x(3);
+        
+        if x(5)==1
+            Membrane_Selected = 'UNA-620A'; %https://www.watersurplus.com/surplus-assets-display.cfm?asset=MEM2830022
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 950*x(4); %(USD) Membrane Cost
+            PresVes = 0*x(4); %(USD) Pressure Vessel Cost - Membrane Housing (https://www.foreverpureplace.com/GA41368-p/ga41368.htm)
+            %filtration_rate = 1164; %GPD
+            Qf_memb = 6.8; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            %Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 45; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 50; % (m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==2
+            Membrane_Selected = 'FR - 8040-HF'; %Synder Filtration
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 1097*x(4); %(USD) Membrane Cost
+            PresVes = 578*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            %filtration_rate = 299; %GPM
+            Qf_memb = 15; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            %Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 116; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 35.2; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==3
+            Membrane_Selected = 'V0.1 - 8040-HF'; %Synder Filtration
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 1097*x(4); %(USD) Membrane Cost
+            PresVes = 578*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            %filtration_rate = 299; %GPM
+            Qf_memb = 15; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            %Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 116; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 35.2; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        elseif x(5)==4
+            Membrane_Selected = 'V0.2 - 8040-HF'; %Synder Filtration
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 1097*x(4); %(USD) Membrane Cost
+            PresVes = 578*x(4); %(USD) Pressure Vessel Cost - Membrane Housing
+            %filtration_rate = 299; %GPM
+            Qf_memb = 15; %(m3/h) Filter feed rate
+            RR_spec = 0.15; %Recovery Ratio
+            %Kw_init = 0.004533031; %Initial Premeability
+            p_psi = 116; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 35.2; %(m^2) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+            
+        else
+            Membrane_Selected = 'None';
+            display(Membrane_Selected, 'Selected membrane is part number:');
+            CCmemb = 2000000; %(USD) Membrane Cost
+            PresVes = 2000000; %(USD) Pressure Vessel Cost - Membrane Housing
+            filtration_rate = 0; %GPD
+            Qf_memb = 0; %(m3/h) Filter feed rate
+            RR_spec = 0; %Recovery Ratio
+            Kw_init = 0; %Initial Premeability
+            p_psi = 0; %psi
+            p = p_psi .* 0.0689476;%pressure in bar
+            A_mem = 0; % (Sq.Ft.) active membrane area is the area of the module
+            A=A_mem*x(4);%total active membrane area is the area of the module x number of modules
+            CF=1/(1-RR_sys);%concentration factor
+            p_osm_avg=p_osm*(exp(0.7*RR_spec))*CF;% average osmotic pressure considering concentration polarization
+            Qp=(RR_spec*Qf_memb)*(A)*(p-p_osm_avg);%m3/h
+            Qf=(1/RR_sys)*(Qp);
+        end
+        
+        % UV purification unit
+        
+        CCuv = 450; %https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
+        uv_power = (44/1000); %KW
+        
+        % Motor and Pump Selection for UF membrane
+        
+        CCmotor = 266; %(350CAD->USD) https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
+        motorReplRate=0.1;% [93] Amy's thesis
+        eff_hp=0.924*0.9;%efficiency of the pump and motor
+        PumpEn = (27.78*p*Qf_memb/eff_hp)/1000; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+        CCpump = 0; %Value not accurate
+        pumpReplRate=0.1;% [93] Amy's thesis
+        PumpEnergy = PumpEn + uv_power;
+        
+        %}
+        
+        % UV purification unit
+        
+        CCuv = 450; %https://www.freshwatersystems.com/products/mighty-pure-mp36c-12-gpm-ultraviolet-water-purifier
+        uv_power = (44/1000); %KW
+        
+        % Motor and Pump Selection for MF membrane
+        
+        CCmotor = 266; %(350CAD->USD) https://www.canadiantire.ca/en/pdp/mastercraft-1-2-hp-jet-pump-0623525p.html#srp
+        motorReplRate=0.1;% [93] Amy's thesis
+        PumpEn = (27.78*p*Qf_memb/eff_hp)/1000; %3-phase power calculation in KW: P = hp*(0.7457/FL efficiency) From: https://www.energy.gov/sites/prod/files/2014/04/f15/10097517.pdf
+        CCpump = 0; %Value not accurate
+        pumpReplRate=0.1;% [93] Amy's thesis
+        PumpEnergy = PumpEn + uv_power;
+        
     end
     
     %% Anti-Scalant Dosing
@@ -754,40 +806,49 @@ elseif x(9) == 4 %WT2
     deltat=1;
     
     Energy_sum=zeros(simulation_day,24);
-    Energy_hourly=zeros(simulation_day,24);
+    Energy_hourly=zeros(simulation_day,24); 
+    Energy_hourly_wind=zeros(simulation_day,24); %Array for hourly wind power 
+    Energy_hourly_solar=zeros(simulation_day,24); %Array for hourly solar power
+    enough_energy_wind= zeros( simulation_day,24); %Array to indicate if there is enough wind power and the system can be turned on
+    enough_energy_solar= zeros( simulation_day,24); %Array to indicate if there is enough solar power and the system can be turned on
+    enough_energy= ones( simulation_day,24); %Array to indicate if there is enough combined power and the system can be turned on
+    Energy_hourly_combined=zeros( simulation_day,24);
+    
+    
     num_hrs=zeros(1,simulation_day);
+    num_hrs_wind=zeros(1,simulation_day);
+    num_hrs_solar=zeros(1,simulation_day);
+    
+    
     Qp=zeros(simulation_day,24);
     PV_E_dif=zeros(simulation_day,24);
     Power_use=zeros(simulation_day,24);
     water_demand=zeros(1,24);
     mass_as=zeros(simulation_day,24);
     Batt_SOC=zeros(simulation_day,24);
-   % PV_Batt_RunningSum=zeros(simulation_day,24);
-    %Batt_SOC_maximin=zeros(1,simulation_day);
-    %BattStorageReqt_Max_Min=zeros(1,simulation_day);
+  
     
     %Power Strategy
     Energy_prev=0;
     Energy_prev_wind=0;
     Energy_prev_solar=0;
+    Energy_prev_hourly=0;
     
     overcharge=0;
-
+    
     
     %% Water and Energy Simulation
     
     eff_syst=0.8;%the battery round trip efficiency
-    
-    % power generated function for wind and solar
-    
-    %PumpEnergy=(27.78*p*Qf_memb/eff_hp)*deltat/1000; %kW is unit of PumpEnergy
+        
     rinsing=zeros(simulation_day,24);
     
     %Water demand
     %make a consistent vector for the water demand, 9am-5pm 1m3/8hours
-    water_demand_base = [0 0 0 0 0 0 0 0 0 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0 0 0 0 0 0 0];
-    water_demand=DailyVol*water_demand_base; %L
+    water_demand_base = [0 0 0 0 0 0 0 0 0 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0 0 0 0 0 0 0];
+    water_demand=waterday*water_demand_base; %L
     foundnowind=0;
+    Batt_SOC_Prev=3*PumpEnergy;
     for i=1:simulation_day
         
         %Membrane Replacement Strategy
@@ -799,82 +860,68 @@ elseif x(9) == 4 %WT2
         end
         
         
-        foundsunset=0;
         %Power Strategy
-        
         
         for s=1:24
             
             Energy_sum_wind(i,s)=W((i-1)*24+s)*deltat+Energy_prev_wind;
             Energy_prev_wind=Energy_sum_wind(i,s);
-            Energy_hourly_wind(i,s)=W((i-1)*24+s)*deltat;
+            Energy_hourly_wind(i,s)=W((i-1)*24+s)*deltat; %Calculates the hourly wind amount of power
             
-         
-            if (((foundnowind==0 && W((i-1)*24+s)==0)))
-                nowind_hr=s;
-                foundnowind=1;
+            if Energy_hourly_wind(i,s)>PumpEnergy %Checks to see if there is enough wind power that hour to turn the pump on
+                num_hrs_wind(i)=num_hrs_wind(i)+1; %Increase number of hours by 1 - calculated everyday
+                enough_energy_wind(i,s)=1; %Marks a 1 down in the array
             else
-                foundnowind=0;
+                enough_energy_wind(i,s)=0; %Marks a 0 down in the array
+                
             end
             
-            
-            % PVPower uses PVpower in kW/m^2, and multiplies by the panel size (m^2),
-            % number of panels and panel efficieny
             Energy_sum_solar(i,s)=solarPower((i-1)*24+s)*deltat+Energy_prev_solar;
             Energy_prev_solar=Energy_sum_solar(i,s);
-            Energy_hourly_solar(i,s)=solarPower((i-1)*24+s)*deltat;
-            
-            if s>12 && (((foundsunset==0 && solarPower((i-1)*24+s)==0)))
-                sunset_hr=s;
-                foundsunset=1;
+            Energy_hourly_solar(i,s)=solarPower((i-1)*24+s)*deltat; %Calculates the hourly solar amount of power
+           
+            if Energy_hourly_solar(i,s)>PumpEnergy %Checks to see if there is enough solar power that hour to turn the pump on
+                num_hrs_solar(i)=num_hrs_solar(i)+1; %Increase number of hours by 1 - calculated everyday
+                enough_energy_solar(i,s)=1; %Marks a 1 down in the array
+            else
+                enough_energy_solar(i,s)=0; %Marks a 0 down in the array
+                
             end
+            
             Energy_sum (i,s) = Energy_sum_solar(i,s)+Energy_sum_wind(i,s)+Energy_prev;
             Energy_prev=Energy_sum(i,s);
-            Energy_hourly (i,s) = Energy_hourly_solar(i,s)+Energy_hourly_wind(i,s);
+            Energy_hourly (i,s) = Energy_hourly_solar(i,s)+Energy_hourly_wind(i,s); % Combined hourly power
+            Energy_hourly_combined (i,s) = Energy_hourly_solar(i,s)+Energy_hourly_wind(i,s)+Energy_prev_hourly; %Combined power with the extra energy from the previous hour
+            Energy_prev_hourly=Energy_hourly_combined(i,s);
             
-            if Energy_hourly(i,s)>PumpEnergy
-                num_hrs(i)=num_hrs(i)+1;
+            
+            if Energy_hourly_combined(i,s)>PumpEnergy %Checks to see if there is enough combined power that hour to turn the pump on
+                num_hrs(i)=num_hrs(i)+1; %Increase number of hours by 1 - calculated everyday
+                Energy_prev_hourly=Energy_hourly_combined(i,s)-PumpEnergy; %If the pump is turned on the energy required is subtracted
+            else
+                enough_energy(i,s)=0;
+                
             end
             
         end
         
-        num_hrs(i)=0;
-        enough_energy=0;
         num_hours_run=0;
-        Pump_EnergyReqt=num_hrs(i)*PumpEnergy;
-
-       %{ 
-        % Number hours run
-        num_hrs(i)=round(Energy_sum(i,24)/PumpEnergy);
-        Pump_EnergyReqt=Energy_sum(i,24)/num_hrs(i);
-        enough_energy=0;
-        num_hours_run=0;
-        %}
+      
         rinsing_flag=0;
-        %Batt_RunningSum_Prev=0;
-        Batt_SOC_Prev=0;
-        
-        turn_off = sunset_hr;
-        turn_off_wind=nowind_hr;
-        turn_on=turn_off-num_hrs(i)-1;
-        turn_on_wind=turn_off_wind-num_hrs(i)-1;
+            
         for s=1:24
-            
-            if s>turn_on || s>turn_on_wind
-                enough_energy=1;
-            end
-            
-            % Rinsing
             
             if (rinsing_flag==0 && rinse==2)
                 
-                if num_hours_run==num_hrs(i)
+                if num_hours_run==num_hrs(i) %Checks to see if the system has run the maximum number of hours possible
                     rinsing_flag=1;
                     rinsing(i,s)=v_rinse;
+                    
                 elseif s==24 && num_hrs(i)>=1
                     rinsing_flag=1;
                     rinsing(i,s)=v_rinse;
                 end
+                
             else
                 rinsing(i,s)=0;
             end
@@ -885,17 +932,31 @@ elseif x(9) == 4 %WT2
             
             FF(i,s)=findPermeability(days_nMem,num_hours_run,FFfit(1),FFfit(2), FFfit(3),FFfit(4));
             
+            Max_BattStor=3*PumpEnergy; %3h worth of battery storage
             
-            if enough_energy==1 && num_hours_run<=num_hrs(i)
+            Batt_SOC(i,s)=(Energy_hourly(i,s)+Power_use(i,s)+Batt_SOC_Prev);
+            Batt_SOC_Prev=Batt_SOC(i,s);
+            
+            if Batt_SOC(i,s)>Max_BattStor
+                overcharge = overcharge+1;
+                Batt_SOC(i,s)=Max_BattStor;
+                
+                %battery storage
+            elseif Batt_SOC(i,s)<0
+                Batt_SOC(i,s)=0;
+            end
+            
+            
+            if enough_energy(i,s)==1 && num_hours_run<=num_hrs(i) && tank_full==0 %Checks to see if there is enough power and there are hours still to be run and the tank is not full
                 % Run system
-                Qp(i,s)=max(0,(Kw_init*FF(i,s)*A*(p-p_osm)));
+                Qp(i,s)=max(0,((RR_spec*Qf_memb)*FF(i,s)*A*(p-p_osm)));
                 
                 %Battery
-                PV_E_dif(i,s)=Energy_hourly(i,s)-Pump_EnergyReqt;
-                Power_use(i,s)=-Pump_EnergyReqt;
-                %add in the uv power?
+                PV_E_dif(i,s)=Energy_hourly(i,s)-PumpEnergy;
+                Power_use(i,s)=-PumpEnergy;
                 
                 num_hours_run=num_hours_run+1;
+                
             else
                 Qp(i,s)=0;
                 %Battery
@@ -903,180 +964,172 @@ elseif x(9) == 4 %WT2
                 Power_use(i,s)=0;
             end
             
-            
-            %Tank Volume
-            
-            if tank_full ==1 % dont add the water Qp(i,s) to the tank
-                tank_vol(i,s)= tank_vol_options-water_demand(s)-rinsing(i,s);
-                if tank_vol(i,s)< tank_vol_options
-                    tank_full=0;
-                else
-                    tank_full=1;
+                
+                %Tank Volume
+                
+                if tank_full ==1 % dont add the water Qp(i,s) to the tank
+                    tank_vol(i,s)= tank_vol_options-water_demand(s)-rinsing(i,s);
+                    if tank_vol(i,s)< tank_vol_options
+                        tank_full=0;
+                    else
+                        tank_full=1;
+                    end
+                    
+                else %  tank_full ==0 % tank is not full, add the Qp(i,s)*t to the tank
+                    tank_vol(i,s)=min(tank_vol_prev+Qp(i,s)*deltat-water_demand(s)-rinsing(i,s),tank_vol_options);
+                end
+                %anti-scalant volume
+                mass_as(i,s)=as_dose*((Qf*deltat)/1000);%determine the mass of anti-scalant based on the feed water volume in that time step
+                
+                
+                % Loss of Water Probability
+                if (tank_vol_prev+Qp(i,s)*deltat-rinsing(i,s))<water_demand(s)
+                    water_not_met_hourly=water_not_met_hourly+1;
                 end
                 
-            else %  tank_full ==0 % tank is not full, add the Qp(i,s)*t to the tank
-                tank_vol(i,s)=min(tank_vol_prev+Qp(i,s)*deltat-water_demand(s)-rinsing(i,s),tank_vol_options);
-            end
-            %anti-scalant volume
-            mass_as(i,s)=as_dose*((Qf*deltat)/1000);%determine the mass of anti-scalant based on the feed water volume in that time step
-            
-            
-            % Loss of Water Probability
-            if (tank_vol_prev+Qp(i,s)*deltat-rinsing(i,s))<water_demand(s)
-                water_not_met_hourly=water_not_met_hourly+1;
-            end
-            
-            %Set the tank_vol_prev to the tank_vol for this loop iteration
-            tank_vol_prev=tank_vol(i,s);
-            
-            % Ensure if tank is empty, the tank volume does not become negative
-            if tank_vol(i,s)<=0
-                tank_vol(i,s)=0;
-                tank_vol_prev=0;
-                tank_full=0;
+                %Set the tank_vol_prev to the tank_vol for this loop iteration
+                tank_vol_prev=tank_vol(i,s);
                 
-            end
-            
-            Max_BattStor=3*PumpEnergy;
-    
+                % Ensure if tank is empty, the tank volume does not become negative
+                if tank_vol(i,s)<=0
+                    tank_vol(i,s)=0;
+                    tank_vol_prev=0;
+                    tank_full=0;
+                elseif tank_vol(i,s)>= tank_vol_options
+                    tank_vol(i,s)=tank_vol_options;
+                    tank_vol_prev=tank_vol_options;
+                    tank_full=1;
+                    
+                end
+                            
             Batt_SOC(i,s)=(Energy_hourly(i,s)+Power_use(i,s)+Batt_SOC_Prev);
             Batt_SOC_Prev=Batt_SOC(i,s);
             
-            if Batt_SOC(i,s)>Max_BattStor
+            if Batt_SOC(i,s)>Max_BattStor %Is there more power than the capacity of the battery
                 overcharge = overcharge+1;
                 Batt_SOC(i,s)=Max_BattStor;
-                %Add in counter to see how many hours it exceeded the max
-                %battery storage
-            end 
-            %PV_Batt_RunningSum(i,s)=PV_E_dif(i,s)+Batt_RunningSum_Prev;
-            %Batt_RunningSum_Prev=PV_Batt_RunningSum(i,s);
+          
+            elseif Batt_SOC(i,s)<0
+                Batt_SOC(i,s)=0;
+            end
+     
+            
+                
+        end
+            
+        end
+        mass_as_used = sum(sum(mass_as));
+        Water_NotMet=water_not_met_hourly/(simulation_day*24);
+        
+        %% Filter and Filter Cartridge
+        CC_Filter=20+65.54;
+        %Filter: http://www.wateranywhere.com/product_info.php?products_id=10168
+        %($20 USD)
+        %Housing:
+        %https://www.aquatell.ca/products/standard-water-filter-housing-kit-20-blue
+        %($65.54 USD)
+        FilterCost=20;
+        FilterReplRate=1/12; %once every month
+        
+        %% Anti-scalant Delivery System
+        if x(1)==1 %design variable 1, Anti-scalant selection = No Antiscalant
+            CC_anti_sc=0;
+            
+        elseif x(1)==2 || x(1)==3 %design variable 1, Using Anti-scalant
+            CC_anti_sc=42.51+14.99;
+            % peristaltic pump cost (42.51 USD) & small anti-scalant tank (14.78)
+            % http://www.williamson-shop.co.uk/100-series-with-dc-powered-motors-3586-p.asp
+            % 20L container http://www.canadiantire.ca/en/pdp/reliance-rectangular-aqua-pak-water-container-0854035p.html#srp
+        end
+        CC_components=CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank;
+        
+        %Balance of System (piping, valves, filter housings)
+        CCpipes=0.1*CC_components; %assumed from Amy's thesis
+        
+        CCpostchems=0.03*CC_components;% post-treatment water re-mineralizing costs [102] Amy's Thesis
+        postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
+        
+        %%Anualized costs since easier to add them up after... pg. 97-99
+        
+        %% Operating Costs
+        
+        
+        % vol_w is in m3
+        % vol_as is in mL
+        
+        %  $/mL of anti-scalant (Flocon 135  $1.60/lb, Flocon 260 $2.10/lb)
+        % Flocon 135 = $1.6/(1/2.20462262185*1000) = $0.00352739619496/g
+        % Flocon 135 density = 1.165±0.035 g/cm3
+        % MSDS 1.13-1.2 g/cm3
+        % http://www.wateranywhere.com/product_info.php?products_id=9025
+        
+        % Flocon 260 = $2.1/lb = $2.1/(1/2.20462262185*1000) = $ 0.004629708/g
+        % Flocon 260 density = 1.35±0.05 g/cm3
+        % alibaba= http://www.chinaseniorsupplier.com/Chemicals/Water_Treatment/1619871336/Flocon260_BWA_antiscalant.html
+        
+        % Rinsing is not assigned a cost b/c it is embedded in ‘cost/unit water’
+        % if you use water to rinse you will be producing less water overall
+        
+        % Annualized cost of anti-scalant since will assume that the total
+        % mass_as_used over the simulation time of 25 years will be on average
+        % the cost per year
+        
+        if x(1)==1 || x(1)==2 %if no antiscalant x(1)=0 then mass_as_used=0)
+            Cost_as= (mass_as_used  *1.165 * 0.00352739619496)/sim_life; %Cost of Flocon 135
+            % Cost_as= mass_as_used * (1.165) * 0.00352739619496; %Cost of Flocon 135
+            
+        else
+            Cost_as= (mass_as_used * 1.35 * 0.004629708)/sim_life; %Cost of Flocon 260
+            % Cost_as= mass_as_used * 1.35 * 0.004629708; %Cost of Flocon 260
         end
         
-        %Battery Storage vector
-        %BattStorageReqt_Max_Min(i)=max(PV_Batt_RunningSum(i,:))-min(PV_Batt_RunningSum(i,:));
-       % Batt_SOC_maximin(i)=max(Batt_SOC(i,:))-min(Batt_SOC(i,:));
-    end
-    mass_as_used = sum(sum(mass_as));
-    Water_NotMet=water_not_met_hourly/(simulation_day*24);
-    
-    %Battery Storage Required
-   
-    %Max_BattStor=max(BattStorageReqt_Max_Min);
-   % locate_max=find(BattStorageReqt_Max_Min==max(BattStorageReqt_Max_Min));
-    
-   % Min_BattStor=min(BattStorageReqt_Max_Min);
-    %locate_min=find(BattStorageReqt_Max_Min==Min_BattStor);
-    
-    
-    %% Filter and Filter Cartridge
-    CC_Filter=20+65.54;
-    %Filter: http://www.wateranywhere.com/product_info.php?products_id=10168
-    %($20 USD)
-    %Housing:
-    %https://www.aquatell.ca/products/standard-water-filter-housing-kit-20-blue
-    %($65.54 USD)
-    FilterCost=20;
-    FilterReplRate=1/12; %once every month
-    
-    %% Anti-scalant Delivery System
-    if x(1)==1 %design variable 1, Anti-scalant selection = No Antiscalant
-        CC_anti_sc=0;
+        %% Energy System
         
-    elseif x(1)==2 || x(1)==3 %design variable 1, Using Anti-scalant
-        CC_anti_sc=42.51+14.99;
-        % peristaltic pump cost (42.51 USD) & small anti-scalant tank (14.78)
-        % http://www.williamson-shop.co.uk/100-series-with-dc-powered-motors-3586-p.asp
-        % 20L container http://www.canadiantire.ca/en/pdp/reliance-rectangular-aqua-pak-water-container-0854035p.html#srp
-    end
-    CC_components=CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank;
-    
-    %Balance of System (piping, valves, filter housings)
-    CCpipes=0.1*CC_components; %assumed from Amy's thesis
-    
-    CCpostchems=0.03*CC_components;% post-treatment water re-mineralizing costs [102] Amy's Thesis
-    postchemsReplRate=0.1;%assumed pg.99 Amy's thesis
-    
-    %%Anualized costs since easier to add them up after... pg. 97-99
-    
-    %% Operating Costs
-    
-    
-    % vol_w is in m3
-    % vol_as is in mL
-    
-    %  $/mL of anti-scalant (Flocon 135  $1.60/lb, Flocon 260 $2.10/lb)
-    % Flocon 135 = $1.6/(1/2.20462262185*1000) = $0.00352739619496/g
-    % Flocon 135 density = 1.165±0.035 g/cm3
-    % MSDS 1.13-1.2 g/cm3
-    % http://www.wateranywhere.com/product_info.php?products_id=9025
-    
-    % Flocon 260 = $2.1/lb = $2.1/(1/2.20462262185*1000) = $ 0.004629708/g
-    % Flocon 260 density = 1.35±0.05 g/cm3
-    % alibaba= http://www.chinaseniorsupplier.com/Chemicals/Water_Treatment/1619871336/Flocon260_BWA_antiscalant.html
-    
-    % Rinsing is not assigned a cost b/c it is embedded in ‘cost/unit water’
-    % if you use water to rinse you will be producing less water overall
-    
-    % Annualized cost of anti-scalant since will assume that the total
-    % mass_as_used over the simulation time of 25 years will be on average
-    % the cost per year
-    
-    if x(1)==1 || x(1)==2 %if no antiscalant x(1)=0 then mass_as_used=0)
-        Cost_as= (mass_as_used  *1.165 * 0.00352739619496)/sim_life; %Cost of Flocon 135
-        % Cost_as= mass_as_used * (1.165) * 0.00352739619496; %Cost of Flocon 135
+        %Balance of System Costs
+        % BOS_structural=(0.12*Wdc) %racking etc.
+        % BOS_electrical=0.27*Wdc % Wholesale prices for conductors, switches,
+        % combiners and transition boxes, as well as conduit, grounding equipment,
+        % monitoring system or production meters, fuses, and breakers
+        %
+        % http://www.nrel.gov/docs/fy16osti/66532.pdf -- page 14
         
-    else
-        Cost_as= (mass_as_used * 1.35 * 0.004629708)/sim_life; %Cost of Flocon 260
-        % Cost_as= mass_as_used * 1.35 * 0.004629708; %Cost of Flocon 260
-    end
-    
-    %% Energy System
-    
-    %Balance of System Costs
-    % BOS_structural=(0.12*Wdc) %racking etc.
-    % BOS_electrical=0.27*Wdc % Wholesale prices for conductors, switches,
-    % combiners and transition boxes, as well as conduit, grounding equipment,
-    % monitoring system or production meters, fuses, and breakers
-    %
-    % http://www.nrel.gov/docs/fy16osti/66532.pdf -- page 14
-    
-    PV.BOS.CC=(0.12*(280)+0.27*280)*x(8);
-    %Battery Capital Costs
-    PV.Batt.CC=Max_BattStor*80; %Advanced Lead Acid Battery Storage is about $80/kWh in 2015 http://www.sciencedirect.com.myaccess.library.utoronto.ca/science/article/pii/B9780444637000000210
-    %Battery Replacement Costs
-    %Assumed every 5 yrs based on 40,000 cycles to failure
-    %conservative estimate some recent studies have shown they can last much
-    %longer... ref?
-    idisc=0.12;%discount rate
-    PV_repl_prev=0;
-    for i=5:5:20
-        PV.Batt.ReplCost= PV.Batt.CC/((1+idisc)^i)+PV_repl_prev;
-        PV_repl_prev=PV.Batt.ReplCost;
-    end
-    
-    %% Annualized Replacement costs
-    disc_rate=0.12; % discount rate of 12% from http://heep.hks.harvard.edu/files/heep/files/dp35_meeks.pdf
-    system_life=25; %25 years
-    Equiv_Ann_cost_factor=(disc_rate*(1+disc_rate)^system_life)/(((1+disc_rate)^system_life)-1);
-    AnnCostsRepl=CCmemb*membReplRate+FilterCost*FilterReplRate+CCpump*pumpReplRate+CCmotor*motorReplRate+CCpostchems*postchemsReplRate;
-    
-    AnnCost=(solarCost+PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost+wind_cost)*Equiv_Ann_cost_factor;
-    
-    AnnCostCC=(CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank+CCpipes)*Equiv_Ann_cost_factor;
-    
-    PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as;
-    
-    PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMet-LOWP_Global));
-    
-    % Reshaping and Visualizing Data to test the simulation
-    
+        PV.BOS.CC=(0.12*(280)+0.27*280)*x(8);
+        %Battery Capital Costs
+        PV.Batt.CC=Max_BattStor*80; %Advanced Lead Acid Battery Storage is about $80/kWh in 2015 http://www.sciencedirect.com.myaccess.library.utoronto.ca/science/article/pii/B9780444637000000210
+        %Battery Replacement Costs
+        %Assumed every 5 yrs based on 40,000 cycles to failure
+        %conservative estimate some recent studies have shown they can last much
+        %longer... ref?
+        idisc=0.12;%discount rate
+        PV_repl_prev=0;
+        for i=5:5:20
+            PV.Batt.ReplCost= PV.Batt.CC/((1+idisc)^i)+PV_repl_prev;
+            PV_repl_prev=PV.Batt.ReplCost;
+        end
+        
+        %% Annualized Replacement costs
+        disc_rate=0.12; % discount rate of 12% from http://heep.hks.harvard.edu/files/heep/files/dp35_meeks.pdf
+        system_life=25; %25 years
+        Equiv_Ann_cost_factor=(disc_rate*(1+disc_rate)^system_life)/(((1+disc_rate)^system_life)-1);
+        AnnCostsRepl=CCmemb*membReplRate+FilterCost*FilterReplRate+CCpump*pumpReplRate+CCmotor*motorReplRate+CCpostchems*postchemsReplRate;
+        
+        AnnCost=(solarCost+PV.BOS.CC+PV.Batt.CC+PV.Batt.ReplCost+wind_cost)*Equiv_Ann_cost_factor;
+        
+        AnnCostCC=(CCmemb+PresVes+CCpump+CCmotor+CC_Filter+CC_anti_sc+CCTank+CCpipes)*Equiv_Ann_cost_factor;
+        
+        PVRO.AnnTotal=AnnCost+AnnCostCC+AnnCostsRepl+Cost_as;
+        
+        PVRO_PenaltyCost=(PVRO.AnnTotal)+(10^Penalty_Glob)*max(0,(Water_NotMet-LOWP_Global));
+%{        
+        % Reshaping and Visualizing Data to test the simulation
+        
     Qp_singlevector=reshape(Qp',simulation_day*24,1);
     tank_vol_singlevector=reshape(tank_vol',simulation_day*24,1);
     Energy_singlevector=reshape(Energy_sum',simulation_day*24,1);
     FF_singlevector=reshape(FF',simulation_day*24,1);
     rinsing_singlevector=reshape(rinsing',simulation_day*24,1);
-    
-    %{
+       
+        
 figure, plot(Qp_singlevector)
 xlabel('hour');
 ylabel('Qp [m^{3}]');
@@ -1093,10 +1146,10 @@ figure, plot(rinsing_singlevector)
 xlabel('hour');
 ylabel('Rinsing [m^{3}]');
 figure, plot(W);
-xlable ('hour');
-ylable ('Wind Power [kW]');
-    %}
-    %save the workspace
-    save('SIM_victoria_originalsettings_Sep3.mat');
-    %%
-end
+xlabel ('hour');
+ylabel ('Wind Power [kW]');
+%}        
+        %save the workspace
+        save('SIM_Australia_LOWP0.07_Fract0.8_ps200_gen200_graphs.mat');
+        %%
+    end
